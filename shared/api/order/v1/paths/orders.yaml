@@ -1,9 +1,15 @@
-openapi: 3.1.0
-info:
-  title: Title
-  description: Title
-  version: 1.0.0
-servers:
-  - url: 'https'
-paths:
-  
+
+
+
+get:
+  summary: Receive an order by UUID
+  operationId: GetOrderByUUID
+  tags:
+    - Order
+  responses:
+    '200':
+      description: Order information successfully retrieved
+      content:
+        application/json:
+          schema:
+            $ref: "../components/get_order_response.yaml"

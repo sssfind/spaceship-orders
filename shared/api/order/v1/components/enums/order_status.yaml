@@ -1,0 +1,7 @@
+type: string
+description: Текущий статус жизненного цикла заказа
+enum:
+  - PENDING_PAYMENT
+  - PAID
+  - CANCELLED
+example: "PAID"
