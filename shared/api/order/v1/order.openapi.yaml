@@ -1,0 +1,18 @@
+openapi: 3.1.0
+info:
+  title: Spaceship-order API
+  description: API для заказа корабля
+  version: 1.0.0
+x-ogen:
+  target: ./pkg/api/spaceship-order/v1
+  package: spaceship-order_v1
+  clean: true
+
+tags:
+  - name: Spaceship
+    description: Операции с заказами кораблей
+
+paths:
+  /api/spaceship-order/{spaceship}:
+    $ref: ./paths/orders.yaml
+  
