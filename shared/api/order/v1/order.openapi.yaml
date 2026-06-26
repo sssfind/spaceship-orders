@@ -13,6 +13,18 @@ tags:
     description: Операции с заказами кораблей
 
 paths:
+
   /api/v1/orders:
-    $ref: ./paths/create_order.yaml
-  
+    $ref: ./paths/create_order_request.yaml
+
+  # 2. Получение заказа и 3. Отмена заказа (так как у них одинаковый URI)
+  /api/v1/order/{order_uuid}:
+    $ref: ./paths/order_by_id.yaml
+
+  # 4. Оплата заказа
+  /api/v1/orders/{order_uuid}/pay:
+    $ref: ./paths/pay_order.yaml
+
+  # 5. Отмена заказа (если решил вынести /cancel в отдельный эндпоинт, согласно ТЗ)
+  /api/v1/orders/{order_uuid}/cancel:
+    $ref: ./paths/cancel_order.yaml

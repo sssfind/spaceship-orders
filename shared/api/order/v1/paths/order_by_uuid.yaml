@@ -1,0 +1,35 @@
+
+
+
+get:
+  summary: Receive an order by UUID
+  operationId: GetOrderByUUID
+  tags:
+    - Order
+  responses:
+    '200':
+      description: Order information successfully retrieved
+      content:
+        application/json:
+          schema:
+            $ref: "../components/order_dto.yaml"
+
+
+put:
+  summary: Update or create order data for customer
+  operationID: UpdateOrderByUUID
+  tags:
+    - Order
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+
+  responses:
+    '200':
+      description: Order information successfully updated
+      content:
+        application/json:
+          schema:
+            $ref: ../components/order_dto.yaml
