@@ -3,19 +3,21 @@ syntax = "proto3";
 package inventory.v1;
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/wrappers.proto";
-import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
-import "validate/validate.proto";
 
+option go_package = "spaceship-orders/shared/pkg/proto/inventory/v1";
+
+// Сервис инвентаря
 service InventoryService {
-  rpc Get(GetRequest) returns (GetResponse) {
+  // Получение информации о детали
+  rpc GetPart(GetPartRequest) returns (GetPartResponse) {
     option (google.api.http) = {
-      get: "api/v1/inventory{uuid}"
+      get: "/api/v1/inventory/{uuid}"
     };
   }
 }
 
+// Деталь космического корабля
 message Part {
   string uuid = 1;
   string name = 2;
@@ -31,14 +33,16 @@ message Part {
   google.protobuf.Timestamp updated_at = 12;
 }
 
+// Категория детали
 enum Category {
-  UNKNOWN = 0;
-  ENGINE = 1;
-  FUEL = 2;
-  PORTHOLE = 3;
-  WING = 4;
+  CATEGORY_UNSPECIFIED = 0;
+  CATEGORY_ENGINE = 1;
+  CATEGORY_FUEL = 2;
+  CATEGORY_PORTHOLE = 3;
+  CATEGORY_WING = 4;
 }
 
+// Габариты детали
 message Dimensions {
   double length = 1;
   double width = 2;
@@ -46,23 +50,29 @@ message Dimensions {
   double weight = 4;
 }
 
+// Информация о производителе
 message Manufacturer {
   string name = 1;
   string country = 2;
   string website = 3;
 }
 
+// Универсальное значение для метаданных
 message Value {
-  string string_value = 1;
-  int64 int64_value = 2;
-  double double_value = 3;
-  bool bool_value = 4;
+  oneof kind {
+    string string_value = 1;
+    int64 int64_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+  }
 }
 
-message GetResponse {
+// Ответ на запрос детали
+message GetPartResponse {
   Part part = 1;
 }
 
-message GetRequest {
+// Запрос детали по UUID
+message GetPartRequest {
   string uuid = 1;
 }
