@@ -1,6 +1,7 @@
 type: string
 description: Способ оплаты заказа
 enum:
+  - UNKNOWN
   - CARD
   - SBP
   - CREDIT_CARD

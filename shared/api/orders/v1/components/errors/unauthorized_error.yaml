@@ -1,0 +1,10 @@
+allOf:
+  - $ref: './generic_error.yaml'
+type: object
+properties:
+  code:
+    type: integer
+    example: 401
+  message:
+    type: string
+    example: "Unauthorized"

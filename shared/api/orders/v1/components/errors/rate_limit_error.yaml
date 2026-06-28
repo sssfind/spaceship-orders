@@ -1,0 +1,10 @@
+allOf:
+  - $ref: './generic_error.yaml'
+type: object
+properties:
+  code:
+    type: integer
+    example: 429
+  message:
+    type: string
+    example: "Too Many Requests"

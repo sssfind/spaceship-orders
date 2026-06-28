@@ -1,32 +1,18 @@
 get:
-  summary: Receive an orders by UUID
-  operationId: GetOrderByUUID
-  tags:
-    - Order
+  summary: Получить заказ по UUID
+  operationId: getOrderByUUID
+  parameters:
+    - $ref: '../params/order_uuid.yaml'
   responses:
     '200':
-      description: Order information successfully retrieved
+      description: Заказ найден
       content:
         application/json:
           schema:
-            $ref: "../components/order_dto.yaml"
-
-
-put:
-  summary: Update or create orders data for customer
-  operationID: UpdateOrderByUUID
-  tags:
-    - Order
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-
-  responses:
-    '200':
-      description: Order information successfully updated
+            $ref: '../components/get_order_response.yaml'
+    '404':
+      description: Заказ не найден
       content:
         application/json:
           schema:
-            $ref: ../components/order_dto.yaml
+            $ref: '../components/errors/not_found_error.yaml'

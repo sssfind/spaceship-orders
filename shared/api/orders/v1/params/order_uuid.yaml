@@ -1,8 +1,6 @@
 name: order_uuid
 in: path
 required: true
-description: UUID, для которого запрашиваются или обновляются данные по заказу
 schema:
   type: string
   format: uuid
-  example: "123e4567-e89b-12d3-a456-426614174000"

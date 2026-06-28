@@ -1,0 +1,10 @@
+allOf:
+  - $ref: './generic_error.yaml'
+type: object
+properties:
+  code:
+    type: integer
+    example: 502
+  message:
+    type: string
+    example: "Bad Gateway"
