@@ -1,8 +1,5 @@
-
-
-
 get:
-  summary: Receive an order by UUID
+  summary: Receive an orders by UUID
   operationId: GetOrderByUUID
   tags:
     - Order
@@ -16,7 +13,7 @@ get:
 
 
 put:
-  summary: Update or create order data for customer
+  summary: Update or create orders data for customer
   operationID: UpdateOrderByUUID
   tags:
     - Order
