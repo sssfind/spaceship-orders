@@ -9,7 +9,7 @@ servers:
 
 x-ogen:
   package: order
-  target: ./pkg/api/spaceship-orders/v1 
+  target: ./shared/pkg/openapi/spaceship-orders/v1
 
 paths:
   /api/v1/orders:

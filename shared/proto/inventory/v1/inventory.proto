@@ -15,6 +15,9 @@ service InventoryService {
       get: "/api/v1/inventory/{uuid}"
     };
   }
+
+  rpc ListParts(ListPartsRequest) returns (ListPartsResponse);
+
 }
 
 // Деталь космического корабля
@@ -73,6 +76,26 @@ message GetPartResponse {
 }
 
 // Запрос детали по UUID
-message GetPartRequest {
+message GetPartRequest{
   string uuid = 1;
+}
+
+
+// Запрос списка деталей
+message ListPartsRequest {
+  PartsFilter filter = 1;
+}
+
+// Ответ со списком деталей
+message ListPartsResponse {
+  repeated Part parts = 1;
+}
+
+// Фильтр для поиска деталей
+message PartsFilter {
+  repeated string uuids = 1;
+  repeated string names = 2;
+  repeated Category categories = 3;
+  repeated string manufacturer_countries = 4;
+  repeated string tags = 5;
 }

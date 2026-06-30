@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	InventoryService_GetPart_FullMethodName = "/inventory.v1.InventoryService/GetPart"
+	InventoryService_GetPart_FullMethodName   = "/inventory.v1.InventoryService/GetPart"
+	InventoryService_ListParts_FullMethodName = "/inventory.v1.InventoryService/ListParts"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -30,6 +31,7 @@ const (
 type InventoryServiceClient interface {
 	// Получение информации о детали
 	GetPart(ctx context.Context, in *GetPartRequest, opts ...grpc.CallOption) (*GetPartResponse, error)
+	ListParts(ctx context.Context, in *ListPartsRequest, opts ...grpc.CallOption) (*ListPartsResponse, error)
 }
 
 type inventoryServiceClient struct {
@@ -50,6 +52,16 @@ func (c *inventoryServiceClient) GetPart(ctx context.Context, in *GetPartRequest
 	return out, nil
 }
 
+func (c *inventoryServiceClient) ListParts(ctx context.Context, in *ListPartsRequest, opts ...grpc.CallOption) (*ListPartsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPartsResponse)
+	err := c.cc.Invoke(ctx, InventoryService_ListParts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InventoryServiceServer is the server API for InventoryService service.
 // All implementations must embed UnimplementedInventoryServiceServer
 // for forward compatibility.
@@ -58,6 +70,7 @@ func (c *inventoryServiceClient) GetPart(ctx context.Context, in *GetPartRequest
 type InventoryServiceServer interface {
 	// Получение информации о детали
 	GetPart(context.Context, *GetPartRequest) (*GetPartResponse, error)
+	ListParts(context.Context, *ListPartsRequest) (*ListPartsResponse, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
@@ -70,6 +83,9 @@ type UnimplementedInventoryServiceServer struct{}
 
 func (UnimplementedInventoryServiceServer) GetPart(context.Context, *GetPartRequest) (*GetPartResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPart not implemented")
+}
+func (UnimplementedInventoryServiceServer) ListParts(context.Context, *ListPartsRequest) (*ListPartsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListParts not implemented")
 }
 func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
 func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
@@ -110,6 +126,24 @@ func _InventoryService_GetPart_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_ListParts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPartsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).ListParts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_ListParts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).ListParts(ctx, req.(*ListPartsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -120,6 +154,10 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPart",
 			Handler:    _InventoryService_GetPart_Handler,
+		},
+		{
+			MethodName: "ListParts",
+			Handler:    _InventoryService_ListParts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
