@@ -37,6 +37,8 @@ type paymentServiceClient struct {
 }
 
 func NewPaymentServiceClient(cc grpc.ClientConnInterface) PaymentServiceClient {
+
+
 	return &paymentServiceClient{cc}
 }
 

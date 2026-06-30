@@ -27,7 +27,7 @@ func (UnimplementedHandler) CancelOrder(ctx context.Context, params CancelOrderP
 // Создание заказа.
 //
 // POST /api/v1/orders
-func (UnimplementedHandler) CreateOrder(ctx context.Context, req *CreateOrderReq) (r *CreateOrderOK, _ error) {
+func (UnimplementedHandler) CreateOrder(ctx context.Context, req *CreateOrderReq) (r CreateOrderRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

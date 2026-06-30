@@ -19,7 +19,7 @@ type Handler interface {
 	// Создание заказа.
 	//
 	// POST /api/v1/orders
-	CreateOrder(ctx context.Context, req *CreateOrderReq) (*CreateOrderOK, error)
+	CreateOrder(ctx context.Context, req *CreateOrderReq) (CreateOrderRes, error)
 	// GetOrderByUUID implements getOrderByUUID operation.
 	//
 	// Получить заказ по UUID.

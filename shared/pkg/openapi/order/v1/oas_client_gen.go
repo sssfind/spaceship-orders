@@ -39,7 +39,7 @@ type Invoker interface {
 	// Создание заказа.
 	//
 	// POST /api/v1/orders
-	CreateOrder(ctx context.Context, request *CreateOrderReq) (*CreateOrderOK, error)
+	CreateOrder(ctx context.Context, request *CreateOrderReq) (CreateOrderRes, error)
 	// GetOrderByUUID invokes getOrderByUUID operation.
 	//
 	// Получить заказ по UUID.
@@ -193,12 +193,12 @@ func (c *Client) sendCancelOrder(ctx context.Context, params CancelOrderParams) 
 // Создание заказа.
 //
 // POST /api/v1/orders
-func (c *Client) CreateOrder(ctx context.Context, request *CreateOrderReq) (*CreateOrderOK, error) {
+func (c *Client) CreateOrder(ctx context.Context, request *CreateOrderReq) (CreateOrderRes, error) {
 	res, err := c.sendCreateOrder(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendCreateOrder(ctx context.Context, request *CreateOrderReq) (res *CreateOrderOK, err error) {
+func (c *Client) sendCreateOrder(ctx context.Context, request *CreateOrderReq) (res CreateOrderRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("createOrder"),
 		semconv.HTTPRequestMethodKey.String("POST"),

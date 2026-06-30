@@ -45,6 +45,8 @@ paths:
                   total_price:
                     type: number
                     format: double
+        '404':
+          description: Заказ не найден
   /api/v1/orders/{order_uuid}:
     get:
       summary: Получить заказ по UUID
@@ -171,4 +173,4 @@ components:
           $ref: '#/components/schemas/OrderStatus'
 x-ogen:
   package: order
-  target: ./shared/pkg/openapi/spaceship-orders/v1
+  target: ./shared/pkg/openapi/order/v1

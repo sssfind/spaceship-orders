@@ -22,6 +22,11 @@ type CancelOrderNotFound struct{}
 
 func (*CancelOrderNotFound) cancelOrderRes() {}
 
+// CreateOrderNotFound is response for CreateOrder operation.
+type CreateOrderNotFound struct{}
+
+func (*CreateOrderNotFound) createOrderRes() {}
+
 type CreateOrderOK struct {
 	OrderUUID  uuid.UUID `json:"order_uuid"`
 	TotalPrice float64   `json:"total_price"`
@@ -46,6 +51,8 @@ func (s *CreateOrderOK) SetOrderUUID(val uuid.UUID) {
 func (s *CreateOrderOK) SetTotalPrice(val float64) {
 	s.TotalPrice = val
 }
+
+func (*CreateOrderOK) createOrderRes() {}
 
 type CreateOrderReq struct {
 	UserUUID  uuid.UUID   `json:"user_uuid"`

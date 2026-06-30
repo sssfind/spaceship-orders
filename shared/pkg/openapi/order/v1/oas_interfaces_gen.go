@@ -5,6 +5,10 @@ type CancelOrderRes interface {
 	cancelOrderRes()
 }
 
+type CreateOrderRes interface {
+	createOrderRes()
+}
+
 type GetOrderByUUIDRes interface {
 	getOrderByUUIDRes()
 }

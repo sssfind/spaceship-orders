@@ -36,18 +36,30 @@ func encodeCancelOrderResponse(response CancelOrderRes, w http.ResponseWriter, s
 	}
 }
 
-func encodeCreateOrderResponse(response *CreateOrderOK, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(200)
-	span.SetStatus(codes.Ok, http.StatusText(200))
+func encodeCreateOrderResponse(response CreateOrderRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *CreateOrderOK:
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := new(jx.Encoder)
-	response.Encode(e)
-	if _, err := e.WriteTo(w); err != nil {
-		return errors.Wrap(err, "write")
+		e := new(jx.Encoder)
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *CreateOrderNotFound:
+		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
 	}
-
-	return nil
 }
 
 func encodeGetOrderByUUIDResponse(response GetOrderByUUIDRes, w http.ResponseWriter, span trace.Span) error {

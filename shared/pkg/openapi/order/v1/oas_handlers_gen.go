@@ -258,7 +258,7 @@ func (s *Server) handleCreateOrderRequest(args [0]string, argsEscaped bool, w ht
 		}
 	}()
 
-	var response *CreateOrderOK
+	var response CreateOrderRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
@@ -273,7 +273,7 @@ func (s *Server) handleCreateOrderRequest(args [0]string, argsEscaped bool, w ht
 		type (
 			Request  = *CreateOrderReq
 			Params   = struct{}
-			Response = *CreateOrderOK
+			Response = CreateOrderRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,

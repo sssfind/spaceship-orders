@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package payment.v1;
 
-option go_package = "spaceship-orders/shared/pkg/proto/payment/v1";
+option go_package = "order/shared/pkg/proto/payment/v1";
 
 // Сервис проведения платежей
 service PaymentService {

@@ -29,7 +29,7 @@ func decodeCancelOrderResponse(resp *http.Response) (res CancelOrderRes, _ error
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
 
-func decodeCreateOrderResponse(resp *http.Response) (res *CreateOrderOK, _ error) {
+func decodeCreateOrderResponse(resp *http.Response) (res CreateOrderRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -75,6 +75,9 @@ func decodeCreateOrderResponse(resp *http.Response) (res *CreateOrderOK, _ error
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 404:
+		// Code 404.
+		return &CreateOrderNotFound{}, nil
 	}
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
