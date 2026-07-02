@@ -20,3 +20,11 @@ type Order struct {
 	TransactionUUID *uuid.UUID
 	PaymentMethod   *PaymentMethod
 }
+
+const (
+	MethodUnknown       PaymentMethod = "UNKNOWN"
+	MethodCard          PaymentMethod = "CARD"
+	MethodSbp           PaymentMethod = "SBP"
+	MethodCreditCard    PaymentMethod = "CREDIT_CARD"
+	MethodInvestorMoney PaymentMethod = "INVESTOR_MONEY"
+)
