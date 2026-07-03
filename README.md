@@ -1,0 +1,1 @@
+![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/sssfind/7e5bafd7b0307b4c541657a022f55c36/raw/coverage.json)

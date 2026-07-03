@@ -11,10 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	apiV1 "order/internal/api/order/v1"
 	clientInventory "order/internal/client/grpc/inventory/v1"
 	clientPayment "order/internal/client/grpc/payment/v1"
@@ -24,6 +20,11 @@ import (
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 	pbPayment "spaceship-orders/shared/pkg/proto/payment/v1"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -37,14 +38,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("ошибка подключения к InventoryService: %v", err)
 	}
-	defer invConn.Close()
+	defer func() { _ = invConn.Close() }()
 	invGrpcClient := pbInventory.NewInventoryServiceClient(invConn)
 
 	payConn, err := grpc.NewClient("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("ошибка подключения к PaymentService: %v", err)
 	}
-	defer payConn.Close()
+	defer func() { _ = payConn.Close() }()
 	payGrpcClient := pbPayment.NewPaymentServiceClient(payConn)
 
 	orderRepo := repoOrder.NewOrderRepository()

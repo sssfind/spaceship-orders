@@ -24,6 +24,7 @@ jobs:
     env:
       COVERAGE_DIR: coverage
       COVERAGE_FILE: total.out
+      GOROOT: ""
 
     steps:
       - name: 📥 Checkout code
@@ -40,7 +41,9 @@ jobs:
       - name: 🧪 Run tests with coverage
         env:
           MODULES: ${{ inputs.modules }}
-        run: task test-coverage
+        run: |
+          go env -w GOTOOLCHAIN=go1.26.0+auto
+          task test-coverage
 
       - name: 📊 Extract coverage percent
         run: |

@@ -299,7 +299,7 @@ tasks:
           go test -coverpkg="$TARGET_PKGS" \
             -coverprofile={{.COVERAGE_DIR}}/$mod.out \
             -covermode=atomic \
-            $(echo "$TARGET_PKGS" | tr "," " ") || ERR=1
+            ./$mod/... || ERR=1
         done
         
         if [ $ERR -ne 0 ]; then
