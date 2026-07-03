@@ -1,9 +1,10 @@
 package part
 
 import (
+	"sync"
+
 	"inventory/internal/repository"
 	repoModel "inventory/internal/repository/model"
-	"sync"
 )
 
 type repo struct {

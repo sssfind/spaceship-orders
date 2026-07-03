@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"inventory/internal/model"
 )
 

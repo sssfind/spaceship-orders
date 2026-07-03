@@ -2,11 +2,11 @@ package v1
 
 import (
 	"context"
-	"inventory/internal/converter"
-	pb "spaceship-orders/shared/pkg/proto/inventory/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"inventory/internal/converter"
+	pb "spaceship-orders/shared/pkg/proto/inventory/v1"
 )
 
 func (h *api) GetPart(ctx context.Context, req *pb.GetPartRequest) (*pb.GetPartResponse, error) {

@@ -17,8 +17,7 @@ func PartToDomain(part *repoModel.Part) domainModel.Part {
 		Description:   part.Description,
 		Category:      domainModel.Category(part.Category),
 		Dimensions:    domainModel.Dimensions(part.Dimensions),
-		Manufacturer: domainModel.Manufacturer(part.Manufacturer),
-		Tags: []string{},
-
+		Manufacturer:  domainModel.Manufacturer(part.Manufacturer),
+		Tags:          []string{},
 	}
 }

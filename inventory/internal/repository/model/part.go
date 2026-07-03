@@ -1,17 +1,19 @@
 package model
 
-type Category int32
-type Part struct {
-	UUID          string
-	Name          string
-	Price         float64
-	StockQuantity int64
-	Description   string
-	Category      Category
-	Dimensions    Dimensions
-	Manufacturer  Manufacturer
-	Tags          []string
-}
+type (
+	Category int32
+	Part     struct {
+		UUID          string
+		Name          string
+		Price         float64
+		StockQuantity int64
+		Description   string
+		Category      Category
+		Dimensions    Dimensions
+		Manufacturer  Manufacturer
+		Tags          []string
+	}
+)
 
 type PartsFilter struct {
 	UUIDs                 []string
