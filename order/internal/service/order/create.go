@@ -3,9 +3,9 @@ package order
 import (
 	"context"
 	"errors"
-	"order/internal/model"
 
 	"github.com/google/uuid"
+	"order/internal/model"
 )
 
 func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []uuid.UUID) (*model.Order, error) {

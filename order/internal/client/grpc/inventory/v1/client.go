@@ -2,7 +2,6 @@ package v1
 
 import (
 	"order/internal/service/order"
-
 	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 )
 

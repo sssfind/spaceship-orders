@@ -2,9 +2,9 @@ package order
 
 import (
 	"context"
-	"order/internal/model"
 
 	"github.com/google/uuid"
+	"order/internal/model"
 )
 
 func (s *srv) PayOrder(ctx context.Context, orderUUID uuid.UUID, method model.PaymentMethod) (uuid.UUID, error) {

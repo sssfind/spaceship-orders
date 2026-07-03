@@ -2,12 +2,11 @@ package v1
 
 import (
 	"context"
-	"order/internal/client/converter"
-	"order/internal/model"
-
-	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 
 	"github.com/google/uuid"
+	"order/internal/client/converter"
+	"order/internal/model"
+	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 )
 
 func (c *grpcClient) ListParts(ctx context.Context, partUUIDs []uuid.UUID) ([]model.Part, error) {
@@ -26,6 +25,6 @@ func (c *grpcClient) ListParts(ctx context.Context, partUUIDs []uuid.UUID) ([]mo
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return converter.ToDomainParts(inventoryRes.Parts), nil
 }

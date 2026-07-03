@@ -1,11 +1,9 @@
 package converter
 
 import (
-	"order/internal/model"
-
-	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
-
 	"github.com/google/uuid"
+	"order/internal/model"
+	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 )
 
 func ToDomainParts(pbParts []*pbInventory.Part) []model.Part {

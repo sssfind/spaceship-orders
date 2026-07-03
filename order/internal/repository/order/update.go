@@ -2,9 +2,9 @@ package order
 
 import (
 	"context" // Не забудь добавить импорт пакета context!
-	"order/internal/model"
 
 	"github.com/google/uuid"
+	"order/internal/model"
 )
 
 func (r *repo) UpdateStatus(ctx context.Context, orderUUID string, status model.OrderStatus, txUUID string, method model.PaymentMethod) error {

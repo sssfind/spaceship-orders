@@ -2,10 +2,10 @@ package order
 
 import (
 	"context"
-	"order/internal/model"
-	"order/internal/repository"
 
 	"github.com/google/uuid"
+	"order/internal/model"
+	"order/internal/repository"
 )
 
 // InventoryClient описывает требования сервиса к работе со складом

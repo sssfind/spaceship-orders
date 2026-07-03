@@ -2,9 +2,9 @@ package v1
 
 import (
 	"context"
-	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 
 	"github.com/google/uuid"
+	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 )
 
 func (h *api) CreateOrder(ctx context.Context, req *orderV1.CreateOrderRequest) (orderV1.CreateOrderRes, error) {

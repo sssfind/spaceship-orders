@@ -6,17 +6,8 @@ import (
 	"log"
 	"net"
 	"net/http"
-	apiV1 "order/internal/api/order/v1"
-	clientInventory "order/internal/client/grpc/inventory/v1"
-	clientPayment "order/internal/client/grpc/payment/v1"
-	customMiddleware "order/internal/middleware"
-	repoOrder "order/internal/repository/order"
-	orderService "order/internal/service/order"
 	"os"
 	"os/signal"
-	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
-	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
-	pbPayment "spaceship-orders/shared/pkg/proto/payment/v1"
 	"syscall"
 	"time"
 
@@ -24,6 +15,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	apiV1 "order/internal/api/order/v1"
+	clientInventory "order/internal/client/grpc/inventory/v1"
+	clientPayment "order/internal/client/grpc/payment/v1"
+	customMiddleware "order/internal/middleware"
+	repoOrder "order/internal/repository/order"
+	orderService "order/internal/service/order"
+	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
+	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
+	pbPayment "spaceship-orders/shared/pkg/proto/payment/v1"
 )
 
 const (

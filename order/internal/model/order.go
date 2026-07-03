@@ -2,8 +2,10 @@ package model
 
 import "github.com/google/uuid"
 
-type OrderStatus string
-type PaymentMethod string
+type (
+	OrderStatus   string
+	PaymentMethod string
+)
 
 const (
 	StatusPendingPayment OrderStatus = "PENDING_PAYMENT"

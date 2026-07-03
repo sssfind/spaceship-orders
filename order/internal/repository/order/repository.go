@@ -1,9 +1,10 @@
 package order
 
 import (
+	"sync"
+
 	"order/internal/model"
 	"order/internal/repository"
-	"sync"
 )
 
 type repo struct {
