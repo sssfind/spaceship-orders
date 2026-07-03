@@ -1,3 +1,6 @@
 contracts/
 node_modules/
 .idea
+bin/
+coverage/
+*.out
