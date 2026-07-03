@@ -1,34 +1,25 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
 
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	paymentV1 "payment/internal/api/payment/v1"
+	paymentService "payment/internal/service/payment"
 	pb "spaceship-orders/shared/pkg/proto/payment/v1"
 )
 
 const grpcPort = 50052
 
-type PaymentServiceServer struct {
-	pb.UnimplementedPaymentServiceServer
-}
-
-func (s *PaymentServiceServer) PayOrder(ctx context.Context, req *pb.PayOrderRequest) (*pb.PayOrderResponse, error) {
-	payUuid := uuid.NewString()
-	log.Printf("Оплата прошла успешно, transaction_uuid: %s", payUuid)
-	return &pb.PayOrderResponse{TransactionUuid: payUuid}, nil
-}
-
 func main() {
-	srv := &PaymentServiceServer{}
+	srv := paymentService.NewService()
+	apiHandler := paymentV1.NewAPI(srv)
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterPaymentServiceServer(grpcServer, srv)
+	pb.RegisterPaymentServiceServer(grpcServer, apiHandler)
 
 	reflection.Register(grpcServer)
 

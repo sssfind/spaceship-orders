@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"order/internal/model"
 	"order/internal/repository"
+	"order/internal/service"
 )
 
 // InventoryClient описывает требования сервиса к работе со складом
@@ -29,7 +30,7 @@ func NewService(
 	orderRepo repository.OrderRepository,
 	inventoryClient InventoryClient,
 	paymentClient PaymentClient,
-) *srv {
+) service.OrderService {
 	return &srv{
 		orderRepo:       orderRepo,
 		inventoryClient: inventoryClient,
