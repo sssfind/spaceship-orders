@@ -6,7 +6,7 @@ type OrderStatus string
 type PaymentMethod string
 
 const (
-	StatusPendingPayment OrderStatus = "1"
+	StatusPendingPayment OrderStatus = "PENDING_PAYMENT"
 	StatusPaid           OrderStatus = "PAID"
 	StatusCancelled      OrderStatus = "CANCELLED"
 )

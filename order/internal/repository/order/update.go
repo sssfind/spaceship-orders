@@ -1,15 +1,17 @@
 package order
 
 import (
+	"context" // Не забудь добавить импорт пакета context!
 	"order/internal/model"
 
 	"github.com/google/uuid"
 )
 
-func (r *repo) UpdateStatus(orderID string, status model.OrderStatus, txUUID string, payMethod model.PaymentMethod) error {
+func (r *repo) UpdateStatus(ctx context.Context, orderUUID string, status model.OrderStatus, txUUID string, method model.PaymentMethod) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	order, ok := r.orders[orderID]
+
+	order, ok := r.orders[orderUUID]
 	if !ok {
 		return nil
 	}
@@ -24,9 +26,9 @@ func (r *repo) UpdateStatus(orderID string, status model.OrderStatus, txUUID str
 		}
 	}
 
-	if payMethod != "" {
-		method := payMethod
-		order.PaymentMethod = &method
+	if method != "" {
+		m := method
+		order.PaymentMethod = &m
 	}
 	return nil
 }
