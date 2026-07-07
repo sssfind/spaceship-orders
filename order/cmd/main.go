@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"order/internal/migrator"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,6 +24,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -34,6 +36,25 @@ const (
 )
 
 func main() {
+	initCtx, initCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer initCancel()
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "postgres://postgres:postgres@localhost:5432/orders?sslmode=disable"
+	}
+
+	dbMigrator := migrator.NewMigrator(dsn, "migrations")
+	if err := dbMigrator.Up(); err != nil {
+		log.Fatalf("migrator up failed: %v", err)
+	}
+	log.Println("database migrator up")
+
+	dbPool, err := pgxpool.New(initCtx, dsn)
+	if err != nil {
+		log.Fatalf("database connection failed: %v", err)
+	}
+	defer dbPool.Close()
+
 	invConn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("ошибка подключения к InventoryService: %v", err)
@@ -48,7 +69,7 @@ func main() {
 	defer func() { _ = payConn.Close() }()
 	payGrpcClient := pbPayment.NewPaymentServiceClient(payConn)
 
-	orderRepo := repoOrder.NewOrderRepository()
+	orderRepo := repoOrder.NewOrderRepository(dbPool)
 
 	inventoryClient := clientInventory.NewClient(invGrpcClient)
 	paymentClient := clientPayment.NewClient(payGrpcClient)

@@ -2,33 +2,48 @@ package order
 
 import (
 	"context" // Не забудь добавить импорт пакета context!
+	"fmt"
+	"order/internal/model"
 
 	"github.com/google/uuid"
-	"order/internal/model"
 )
 
 func (r *repo) UpdateStatus(ctx context.Context, orderUUID string, status model.OrderStatus, txUUID string, method model.PaymentMethod) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	query := `
+		UPDATE orders
+		SET status = $1,
+		    transaction_uuid = $2,
+		    payment_method = $3
+		WHERE order_uuid = $4
+	`
 
-	order, ok := r.orders[orderUUID]
-	if !ok {
-		return nil
-	}
-
-	if status != "" {
-		order.Status = status
-	}
-
+	var targetTxUUID *uuid.UUID
 	if txUUID != "" {
-		if parsedUUID, err := uuid.Parse(txUUID); err == nil {
-			order.TransactionUUID = &parsedUUID
+		parsed, err := uuid.Parse(txUUID)
+		if err != nil {
+			return fmt.Errorf("repository: неверный формат txUUID: %w", err)
 		}
+		targetTxUUID = &parsed
+	}
+	var targetPayMethod *model.PaymentMethod
+	if method != "" {
+		targetPayMethod = &method
 	}
 
-	if method != "" {
-		m := method
-		order.PaymentMethod = &m
+	cmdTag, err := r.db.Exec(ctx, query,
+		status,
+		targetTxUUID,
+		targetPayMethod,
+		orderUUID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("repository: error updating status: %w", err)
 	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return model.ErrOrderNotFound
+	}
+	
 	return nil
 }

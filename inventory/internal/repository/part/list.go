@@ -2,15 +2,19 @@ package part
 
 import (
 	"context"
-
-	domainModel "inventory/internal/model"
+	"fmt"
 	"inventory/internal/repository/converter"
 	repoModel "inventory/internal/repository/model"
+	"log"
+
+	domainModel "inventory/internal/model"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (r *repo) List(ctx context.Context, filter *domainModel.PartsFilter) ([]domainModel.Part, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	mongoFilter := bson.M{}
 
 	var filterTagsSet map[string]struct{}
 	if filter != nil && len(filter.Tags) > 0 {
@@ -20,61 +24,51 @@ func (r *repo) List(ctx context.Context, filter *domainModel.PartsFilter) ([]dom
 		}
 	}
 
+	if filter != nil {
+		if len(filter.UUIDs) > 0 {
+			mongoFilter["uuid"] = bson.M{"$in": filter.UUIDs}
+		}
+		if len(filter.Names) > 0 {
+			mongoFilter["name"] = bson.M{"$in": filter.Names}
+		}
+		if len(filter.Categories) > 0 {
+			mongoFilter["category"] = bson.M{"$in": filter.Categories}
+		}
+		if len(filter.ManufacturerCountries) > 0 {
+			mongoFilter["manufacturer.country"] = bson.M{"$in": filter.ManufacturerCountries}
+		}
+		if len(filter.Tags) > 0 {
+			// В Mongo оператор $in для массива поля означает: "выбрать документы,
+			// где в массиве tags есть ХОТЯ БЫ ОДИН элемент из filter.Tags"
+			mongoFilter["tags"] = bson.M{"$in": filter.Tags}
+		}
+	}
+
+	cursor, err := r.collection.Find(ctx, mongoFilter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list parts: %w", err)
+	}
+
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			log.Printf("failed to close cursor: %v", err)
+		}
+	}(cursor, ctx)
+
 	var result []domainModel.Part
 
-	for _, part := range r.parts {
-		if filter == nil {
-			result = append(result, converter.PartToDomain(part))
-			continue
+	for cursor.Next(ctx) {
+		var part repoModel.Part
+		if err := cursor.Decode(&part); err != nil {
+			return nil, fmt.Errorf("failed to decode part: %w", err)
 		}
-
-		if len(filter.UUIDs) > 0 && !containsString(filter.UUIDs, part.UUID) {
-			continue
-		}
-		if len(filter.Names) > 0 && !containsString(filter.Names, part.Name) {
-			continue
-		}
-
-		if len(filter.Categories) > 0 && !containsCategory(filter.Categories, part.Category) {
-			continue
-		}
-
-		if len(filter.ManufacturerCountries) > 0 && !containsString(filter.ManufacturerCountries, part.Manufacturer.Country) {
-			continue
-		}
-
-		if len(filter.Tags) > 0 && !containsTags(filter.Tags, filterTagsSet) {
-			continue
-		}
-
-		result = append(result, converter.PartToDomain(part))
+		result = append(result, converter.PartToDomain(&part))
 	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor err: %w", err)
+	}
+	
 	return result, nil
-}
-
-func containsString(slice []string, s string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
-}
-
-func containsCategory(categories []domainModel.Category, target repoModel.Category) bool {
-	for _, item := range categories {
-		if repoModel.Category(item) == target {
-			return true
-		}
-	}
-	return false
-}
-
-func containsTags(tags []string, target map[string]struct{}) bool {
-	for _, tag := range tags {
-		if _, exists := target[tag]; exists {
-			return true
-		}
-	}
-	return false
 }

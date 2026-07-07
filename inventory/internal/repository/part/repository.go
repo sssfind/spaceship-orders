@@ -1,20 +1,18 @@
 package part
 
 import (
-	"sync"
-
 	"inventory/internal/repository"
-	repoModel "inventory/internal/repository/model"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type repo struct {
-	mu    sync.RWMutex
-	parts map[string]*repoModel.Part
+	collection *mongo.Collection
 }
 
-func NewPartRepository() repository.PartRepository {
+func NewPartRepository(collection *mongo.Collection) repository.PartRepository {
 	r := &repo{
-		parts: make(map[string]*repoModel.Part),
+		collection: collection,
 	}
 	r.initTestData() // Заполняем тестовыми данными из init.go
 	return r
