@@ -70,15 +70,15 @@ func main() {
 
 	reflection.Register(grpcServer)
 
-	listener, err := net.Listen("tcp", ":50051")
+	listener, err := net.Listen("tcp", net.JoinHostPort("0.0.0.0", grpcPort))
 	if err != nil {
-		log.Fatalf("Ошибка при прослушивании порта: %v", err)
+		log.Fatalf("Ошибка при прослушивании порта %s: %v", grpcPort, err)
 	}
 
 	go func() {
-		fmt.Println("🚀 InventoryService запущен на порту 50051")
-		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatalf("Ошибка сервера: %v", err)
+		fmt.Printf("InventoryService запущен на порту %s\n", grpcPort)
+		if err := grpcServer.Serve(listener); err != nil && err != grpc.ErrServerStopped {
+			log.Fatalf("Ошибка gRPC сервера: %v", err)
 		}
 	}()
 

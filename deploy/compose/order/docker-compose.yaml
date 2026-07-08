@@ -1,0 +1,39 @@
+services:
+  orders_db:
+    image: postgres:16-alpine
+    container_name: orders_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-superpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-spaceship_orders}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - spaceship_network
+    volumes:
+      - orders_pg_data:/var/lib/postgresql/data
+
+  order_app:
+    image: order:latest
+    container_name: order_service
+    build:
+      context: ../../../
+      dockerfile: deploy/docker/order/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:superpassword@orders_postgres:5432/spaceship_orders?sslmode=disable
+      
+      - INVENTORY_GRPC_ADDR=inventory_service:50051
+      - PAYMENT_GRPC_ADDR=payment_service:50052
+    networks:
+      - spaceship_network
+    depends_on:
+      - orders_db
+
+volumes:
+  orders_pg_data:
+
+networks:
+  spaceship_network:
+    external: true

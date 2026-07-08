@@ -1,0 +1,30 @@
+services:
+  inventory_db:
+    image: mongo:7.0
+    container_name: inventory_mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - spaceship_network
+    volumes:
+      - inventory_mongo_data:/data/db
+
+  inventory_app:
+    image: inventory:latest
+    container_name: inventory_service
+    ports:
+      - "${GRPC_PORT:-50051}:${GRPC_PORT:-50051}"
+    environment:
+      - DB_URI=${DB_URI}
+      - GRPC_PORT=${GRPC_PORT}
+    networks:
+      - spaceship_network
+    depends_on:
+      - inventory_db
+
+volumes:
+  inventory_mongo_data:
+
+networks:
+  spaceship_network:
+    external: true

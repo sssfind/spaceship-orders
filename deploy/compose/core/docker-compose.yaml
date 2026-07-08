@@ -1,0 +1,13 @@
+services:
+  payment_app:
+    image: payment:latest
+    container_name: payment_service
+    ports:
+      - "50052:50052"
+    networks:
+      - spaceship_network
+
+networks:
+  spaceship_network:
+    name: spaceship_network
+    driver: bridge

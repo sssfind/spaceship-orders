@@ -12,23 +12,32 @@ on:
 
 jobs:
   test:
-    name: Run go test
     runs-on: ubuntu-latest
 
+    # Запускаем контейнер с MongoDB рядом с контейнером тестов
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        # Ждем, пока Mongo успешно стартует, прежде чем запускать шаги
+        options: >-
+          --health-cmd "echo 'db.runCommand({ping:1})' | mongosh localhost:27017 --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - name: 📦 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4.2.2
 
-      - name: 🛠 Set up Go
-        uses: actions/setup-go@v5.4.0
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ inputs.go-version }}
-          cache: false # отключаем кэш go.sum в корне
 
-      - name: 📌 Install Task
+      - name: Install Task
         uses: arduino/setup-task@v2.0.0
 
-      - name: 🧪 Run unit tests via Taskfile
-        env:
-          MODULES: ${{ inputs.modules }}
+      - name: Run tests
         run: task test

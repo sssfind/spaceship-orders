@@ -25,6 +25,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -38,6 +39,9 @@ const (
 func main() {
 	initCtx, initCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer initCancel()
+
+	_ = godotenv.Load(".env")
+
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		dsn = "postgres://postgres:postgres@localhost:5432/orders?sslmode=disable"
@@ -55,14 +59,23 @@ func main() {
 	}
 	defer dbPool.Close()
 
-	invConn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	inventoryAddr := os.Getenv("INVENTORY_GRPC_ADDR")
+	if inventoryAddr == "" {
+		inventoryAddr = "inventory_service:50051"
+	}
+
+	invConn, err := grpc.NewClient(inventoryAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("ошибка подключения к InventoryService: %v", err)
 	}
 	defer func() { _ = invConn.Close() }()
 	invGrpcClient := pbInventory.NewInventoryServiceClient(invConn)
 
-	payConn, err := grpc.NewClient("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	paymentAddr := os.Getenv("PAYMENT_GRPC_ADDR")
+	if paymentAddr == "" {
+		paymentAddr = "localhost:50052"
+	}
+	payConn, err := grpc.NewClient(paymentAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("ошибка подключения к PaymentService: %v", err)
 	}
@@ -93,7 +106,7 @@ func main() {
 	r.Mount("/", orderServer)
 
 	server := &http.Server{
-		Addr:              net.JoinHostPort("localhost", httpPort),
+		Addr:              net.JoinHostPort("0.0.0.0", httpPort),
 		Handler:           r,
 		ReadHeaderTimeout: readHeaderTimeout,
 	}

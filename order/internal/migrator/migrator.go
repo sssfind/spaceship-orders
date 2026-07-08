@@ -3,6 +3,7 @@ package migrator
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -25,7 +26,12 @@ func (m *Migrator) Up() error {
 	if err != nil {
 		return fmt.Errorf("opening database connection: %w", err)
 	}
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Printf("closing database connection: %v", err)
+		}
+	}(db)
 
 	if err := goose.SetDialect("postgres"); err != nil {
 		return fmt.Errorf("setting postgres dialect: %w", err)
