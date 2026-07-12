@@ -1,35 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"net"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-	paymentV1 "payment/internal/api/payment/v1"
-	paymentService "payment/internal/service/payment"
-	pb "spaceship-orders/shared/pkg/proto/payment/v1"
+	"payment/internal/app"
 )
 
-const grpcPort = 50052
-
 func main() {
-	srv := paymentService.NewService()
-	apiHandler := paymentV1.NewAPI(srv)
+	ctx := context.Background()
 
-	grpcServer := grpc.NewServer()
-	pb.RegisterPaymentServiceServer(grpcServer, apiHandler)
-
-	reflection.Register(grpcServer)
-
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+	application, err := app.NewApp(ctx)
 	if err != nil {
-		log.Fatalf("Ошибка при прослушивании порта: %v", err)
+		log.Fatalf("failed to initialize payment application: %v", err)
 	}
 
-	fmt.Printf("PaymentService запущен на порту %d", grpcPort)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Ошибка сервера: %v", err)
+	if err := application.Run(); err != nil {
+		log.Fatalf("failed to run payment application: %v", err)
 	}
 }
