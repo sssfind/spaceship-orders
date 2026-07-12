@@ -1,0 +1,70 @@
+package pg
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
+)
+
+type Migrator struct {
+	dsn           string
+	migrationsDir string
+}
+
+func NewMigrator(dsn, migrationsDir string) *Migrator {
+	return &Migrator{
+		dsn:           dsn,
+		migrationsDir: migrationsDir,
+	}
+}
+
+// Up запускает миграции вверх до актуальной версии
+func (m *Migrator) Up() error {
+	db, err := sql.Open("pgx", m.dsn)
+	if err != nil {
+		return fmt.Errorf("opening database connection: %w", err)
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Printf("closing database connection: %v", err)
+		}
+	}(db)
+
+	if err := goose.SetDialect("postgres"); err != nil {
+		return fmt.Errorf("setting postgres dialect: %w", err)
+	}
+
+	if err := goose.Up(db, m.migrationsDir); err != nil {
+		return fmt.Errorf("running migrations: %w", err)
+	}
+
+	return nil
+}
+
+// Down откатывает последнюю миграцию
+func (m *Migrator) Down() error {
+	db, err := sql.Open("pgx", m.dsn)
+	if err != nil {
+		return fmt.Errorf("opening database connection: %w", err)
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Printf("closing database connection: %v", err)
+		}
+	}(db)
+
+	if err := goose.SetDialect("postgres"); err != nil {
+		return fmt.Errorf("setting postgres dialect: %w", err)
+	}
+
+	if err := goose.Down(db, m.migrationsDir); err != nil {
+		return fmt.Errorf("rolling back migration: %w", err)
+	}
+
+	return nil
+}

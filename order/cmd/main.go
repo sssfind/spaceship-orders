@@ -6,9 +6,9 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"order/internal/migrator"
 	"os"
 	"os/signal"
+	"platform/pkg/migrator"
 	"syscall"
 	"time"
 
