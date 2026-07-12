@@ -1,0 +1,30 @@
+name: Run Integration Tests
+
+on:
+  workflow_call:
+    inputs:
+      modules:
+        required: true
+        type: string
+      go-version:
+        required: true
+        type: string
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - name: Install Task
+        uses: arduino/setup-task@v2.0.0
+
+      - name: Run integration tests
+        run: task test-integration
