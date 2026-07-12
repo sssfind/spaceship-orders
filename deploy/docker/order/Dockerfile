@@ -9,11 +9,13 @@ COPY shared/go.mod shared/go.sum* ./shared/
 COPY inventory/go.mod inventory/go.sum* ./inventory/
 COPY order/go.mod order/go.sum* ./order/
 COPY payment/go.mod payment/go.sum* ./payment/
+COPY platform/go.mod platform/go.sum* ./platform/
 
 RUN go mod download
 
 COPY shared/ ./shared/
 COPY order/ ./order/
+COPY platform/ ./platform/
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /bin/app ./order/cmd
 
