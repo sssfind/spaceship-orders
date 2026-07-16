@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"inventory/internal/app"
 	"log"
+
+	"inventory/internal/app"
 )
 
 func main() {

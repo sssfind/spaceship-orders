@@ -25,5 +25,5 @@ func NewLoggerConfig() (*loggerConfig, error) {
 	}, nil
 }
 
-func (cfg *loggerConfig) GetLogLevel() string { return cfg.level }
-func (cfg *loggerConfig) GetLogAsJSON() bool  { return cfg.asJSON }
+func (cfg *loggerConfig) LogLevel() string { return cfg.level }
+func (cfg *loggerConfig) LogAsJSON() bool  { return cfg.asJSON }

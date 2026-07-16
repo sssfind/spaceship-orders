@@ -41,10 +41,10 @@ func NewPostgresConfig() (*postgres, error) {
 	}, nil
 }
 
-func (cfg *postgres) GetDSN() string {
+func (cfg *postgres) Dsn() string {
 	return cfg.dsn
 }
 
-func (cfg *postgres) GetMigrationDir() string {
+func (cfg *postgres) MigrationDir() string {
 	return cfg.migrationDir
 }

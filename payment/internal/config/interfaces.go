@@ -1,10 +1,10 @@
 package config
 
 type LoggerConfig interface {
-	GetLogLevel() string
-	GetLogAsJSON() bool
+	LogLevel() string
+	LogAsJSON() bool
 }
 
 type PaymentGrpcConfig interface {
-	GetAddress() string
+	Address() string
 }

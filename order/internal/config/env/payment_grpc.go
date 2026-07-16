@@ -22,4 +22,4 @@ func NewPaymentGrpcConfig() (*paymentGrpc, error) {
 	}, nil
 }
 
-func (cfg *paymentGrpc) GetAddress() string { return cfg.address }
+func (cfg *paymentGrpc) Address() string { return cfg.address }

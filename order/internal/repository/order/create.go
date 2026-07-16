@@ -22,7 +22,6 @@ func (r *repo) Create(ctx context.Context, order *model.Order) error {
 		order.TransactionUUID,
 		order.PaymentMethod,
 	)
-
 	if err != nil {
 		return fmt.Errorf("repository: create order: %w", err)
 	}

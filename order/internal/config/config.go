@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"order/internal/config/env"
 
 	"github.com/joho/godotenv"
+	"order/internal/config/env"
 )
 
 type Config struct {
@@ -13,6 +13,9 @@ type Config struct {
 	PaymentGrpcConfig
 	OrderHttpConfig
 	PostgresConfig
+	KafkaConfig
+	OrderPaidProducerConfig
+	OrderAssembledConsumerConfig
 }
 
 func Load() (*Config, error) {
@@ -43,11 +46,29 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("postgres config error: %w", err)
 	}
 
+	kafkaCfg, err := env.NewKafkaConfig()
+	if err != nil {
+		return nil, fmt.Errorf("kafka config error: %w", err)
+	}
+
+	paidProducerCfg, err := env.NewOrderPaidProducerConfig()
+	if err != nil {
+		return nil, fmt.Errorf("order paid producer config error: %w", err)
+	}
+
+	assembledConsumerCfg, err := env.NewOrderAssembledConsumerConfig()
+	if err != nil {
+		return nil, fmt.Errorf("order assembled consumer config error: %w", err)
+	}
+
 	return &Config{
-		LoggerConfig:        loggerCfg,
-		InventoryGrpcConfig: inventoryCfg,
-		PaymentGrpcConfig:   paymentCfg,
-		OrderHttpConfig:     httpCfg,
-		PostgresConfig:      postgresCfg,
+		LoggerConfig:                 loggerCfg,
+		InventoryGrpcConfig:          inventoryCfg,
+		PaymentGrpcConfig:            paymentCfg,
+		OrderHttpConfig:              httpCfg,
+		PostgresConfig:               postgresCfg,
+		KafkaConfig:                  kafkaCfg,
+		OrderPaidProducerConfig:      paidProducerCfg,
+		OrderAssembledConsumerConfig: assembledConsumerCfg,
 	}, nil
 }

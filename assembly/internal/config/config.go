@@ -1,0 +1,49 @@
+package config
+
+import (
+	"fmt"
+
+	"assembly/internal/config/env"
+)
+
+type cfg struct {
+	kafkaConfig                  KafkaConfig
+	loggerConfig                 LoggerConfig
+	orderPaidConsumerConfig      OrderPaidConsumerConfig
+	orderAssembledProducerConfig OrderAssembledProducerConfig
+}
+
+func NewConfig() (Config, error) {
+	kafkaCfg, err := env.NewKafkaConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load kafka config: %w", err)
+	}
+
+	loggerCfg, err := env.NewLoggerConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load logger config: %w", err)
+	}
+
+	paidConsumerCfg, err := env.NewOrderPaidConsumerConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load order paid consumer config: %w", err)
+	}
+
+	assembledProducerCfg, err := env.NewOrderAssembledProducerConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load order assembled producer config: %w", err)
+	}
+
+	return &cfg{
+		kafkaConfig:                  kafkaCfg,
+		loggerConfig:                 loggerCfg,
+		orderPaidConsumerConfig:      paidConsumerCfg,
+		orderAssembledProducerConfig: assembledProducerCfg,
+	}, nil
+}
+
+func (c *cfg) Brokers() []string      { return c.kafkaConfig.Brokers() }
+func (c *cfg) LogLevel() string       { return c.loggerConfig.LogLevel() }
+func (c *cfg) PaidTopic() string      { return c.orderPaidConsumerConfig.PaidTopic() }
+func (c *cfg) GroupID() string        { return c.orderPaidConsumerConfig.GroupID() }
+func (c *cfg) AssembledTopic() string { return c.orderAssembledProducerConfig.AssembledTopic() }

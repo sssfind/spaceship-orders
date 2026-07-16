@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"inventory/internal/config/env"
 
 	"github.com/joho/godotenv"
+	"inventory/internal/config/env"
 )
 
 type Config struct {

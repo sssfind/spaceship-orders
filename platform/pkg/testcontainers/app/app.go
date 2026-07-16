@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"net"
-	"platform/pkg/logger"
 	"time"
 
 	"github.com/docker/go-connections/nat"
@@ -13,6 +12,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
+	"platform/pkg/logger"
 )
 
 const (

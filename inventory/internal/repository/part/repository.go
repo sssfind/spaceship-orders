@@ -1,9 +1,8 @@
 package part
 
 import (
-	"inventory/internal/repository"
-
 	"go.mongodb.org/mongo-driver/mongo"
+	"inventory/internal/repository"
 )
 
 type repo struct {

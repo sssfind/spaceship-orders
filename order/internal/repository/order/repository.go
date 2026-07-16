@@ -1,9 +1,8 @@
 package order
 
 import (
-	"order/internal/repository"
-
 	"github.com/jackc/pgx/v5/pgxpool"
+	"order/internal/repository"
 )
 
 type repo struct {

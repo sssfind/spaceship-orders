@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"syscall"
+
 	healthAPI "order/internal/api/health"
 	"order/internal/config"
 	customMiddleware "order/internal/middleware"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	platformMigrator "platform/pkg/migrator/pg"
-	"syscall"
-
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 
 	"github.com/go-chi/chi/v5"
@@ -34,7 +34,7 @@ func NewApp(ctx context.Context) (*App, error) {
 	}
 
 	// Инициализируем глобальный структурированный логгер платформы
-	err = logger.Init(cfg.GetLogLevel(), cfg.GetLogAsJSON())
+	err = logger.Init(cfg.LogLevel(), cfg.LogAsJSON())
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
@@ -53,8 +53,8 @@ func NewApp(ctx context.Context) (*App, error) {
 func (a *App) initDependencies(ctx context.Context) error {
 	// Накатываем миграции БД через платформенную библиотеку
 	dbMigrator := platformMigrator.NewMigrator(
-		a.serviceProvider.cfg.GetDSN(),
-		a.serviceProvider.cfg.GetMigrationDir(),
+		a.serviceProvider.cfg.Dsn(),
+		a.serviceProvider.cfg.MigrationDir(),
 	)
 	if err := dbMigrator.Up(); err != nil {
 		return fmt.Errorf("database migration failed: %w", err)
@@ -84,9 +84,9 @@ func (a *App) initDependencies(ctx context.Context) error {
 	r.Mount("/", orderServer)
 
 	a.httpServer = &http.Server{
-		Addr:              a.serviceProvider.cfg.OrderHttpConfig.GetAddress(),
+		Addr:              a.serviceProvider.cfg.OrderHttpConfig.Address(),
 		Handler:           r,
-		ReadHeaderTimeout: a.serviceProvider.cfg.GetReadTimeout(),
+		ReadHeaderTimeout: a.serviceProvider.cfg.ReadTimeout(),
 	}
 
 	closer.AddNamed("http_server", func(c context.Context) error {
@@ -99,7 +99,23 @@ func (a *App) initDependencies(ctx context.Context) error {
 func (a *App) Run() error {
 	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
 
-	logger.Info(context.Background(), fmt.Sprintf("order HTTP Server успешно запущен на %s", a.httpServer.Addr))
+	closer.SetLogger(logger.Logger())
+
+	ctx := context.Background()
+
+	cons, err := a.serviceProvider.OrderConsumer(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to run order consumer: %w", err)
+	}
+
+	go func() {
+		logger.Info(ctx, "Order Service Kafka Consumer is starting...")
+		if err := cons.Run(ctx); err != nil {
+			logger.Error(ctx, fmt.Sprintf("Order Consumer stopped with error: %v", err))
+		}
+	}()
+
+	logger.Info(ctx, fmt.Sprintf("order HTTP Server успешно запущен на %s", a.httpServer.Addr))
 
 	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("http server runtime error: %w", err)

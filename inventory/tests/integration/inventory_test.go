@@ -3,9 +3,8 @@
 package integration
 
 import (
-	"spaceship-orders/shared/pkg/proto/inventory/v1"
-
 	"github.com/google/uuid"
+	"spaceship-orders/shared/pkg/proto/inventory/v1"
 )
 
 func (s *InventoryTestSuite) TestGetPart_NotFound() {

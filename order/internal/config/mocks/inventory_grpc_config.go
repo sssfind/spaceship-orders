@@ -9,12 +9,12 @@ type InventoryGrpcConfig struct {
 	mock.Mock
 }
 
-// GetAddress provides a mock function with no fields
-func (_m *InventoryGrpcConfig) GetAddress() string {
+// Address provides a mock function with no fields
+func (_m *InventoryGrpcConfig) Address() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetAddress")
+		panic("no return value specified for Address")
 	}
 
 	var r0 string

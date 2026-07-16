@@ -1,0 +1,31 @@
+FROM golang:1.26-alpine AS builder
+
+WORKDIR /app
+
+# Копируем файлы воркспейса
+COPY go.work go.work.sum ./
+
+# Копируем go.mod и go.sum всех модулей воркспейса для кэширования
+COPY go.mod go.sum ./
+COPY shared/go.mod shared/go.sum* ./shared/
+COPY inventory/go.mod inventory/go.sum* ./inventory/
+COPY order/go.mod order/go.sum* ./order/
+COPY payment/go.mod payment/go.sum* ./payment/
+COPY platform/go.mod platform/go.sum* ./platform/
+COPY assembly/go.mod assembly/go.sum* ./assembly/
+
+RUN go mod download
+
+COPY shared/ ./shared/
+COPY platform/ ./platform/
+COPY assembly/ ./assembly/
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /bin/app ./assembly/cmd
+
+FROM alpine:3.20
+
+WORKDIR /app
+
+COPY --from=builder /bin/app /app/server
+
+CMD ["./server"]

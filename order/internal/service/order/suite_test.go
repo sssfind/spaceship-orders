@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
 	clientMocks "order/internal/client/grpc/mocks"
+	producerMocks "order/internal/producer/order_producer/mocks"
 	repoMocks "order/internal/repository/mocks"
 	"order/internal/service"
 	orderService "order/internal/service/order"
+
+	"github.com/stretchr/testify/suite"
 )
 
 type OrderServiceTestSuite struct {
@@ -17,6 +19,7 @@ type OrderServiceTestSuite struct {
 	repoMock      *repoMocks.OrderRepository
 	inventoryMock *clientMocks.InventoryClient
 	paymentMock   *clientMocks.PaymentClient
+	producerMock  *producerMocks.OrderProducer
 	service       service.OrderService
 }
 
@@ -25,8 +28,9 @@ func (s *OrderServiceTestSuite) SetupTest() {
 	s.repoMock = repoMocks.NewOrderRepository(s.T())
 	s.inventoryMock = clientMocks.NewInventoryClient(s.T())
 	s.paymentMock = clientMocks.NewPaymentClient(s.T())
+	s.producerMock = producerMocks.NewOrderProducer(s.T())
 
-	s.service = orderService.NewService(s.repoMock, s.inventoryMock, s.paymentMock)
+	s.service = orderService.NewService(s.repoMock, s.inventoryMock, s.paymentMock, s.producerMock)
 }
 
 func TestOrderServiceSuite(t *testing.T) {

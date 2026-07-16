@@ -2,10 +2,10 @@ package mongo
 
 import (
 	"context"
-	"platform/pkg/logger"
 
 	"github.com/moby/moby/api/types/container"
 	"go.uber.org/zap"
+	"platform/pkg/logger"
 )
 
 type Logger interface {

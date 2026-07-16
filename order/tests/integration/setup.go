@@ -5,12 +5,12 @@ package integration
 import (
 	"context"
 	"fmt"
-	repoOrder "order/internal/repository/order"
-	platformMigrator "platform/pkg/migrator/pg"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	repoOrder "order/internal/repository/order"
+	platformMigrator "platform/pkg/migrator/pg"
 )
 
 func (s *OrderTestSuite) SetupSuite() {

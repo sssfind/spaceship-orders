@@ -1,9 +1,8 @@
 package part_test
 
 import (
-	"inventory/internal/model"
-
 	"github.com/stretchr/testify/mock"
+	"inventory/internal/model"
 )
 
 func (s *PartServiceTestSuite) TestListParts_Success() {

@@ -3,10 +3,12 @@ package order
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"order/internal/model"
+	"order/internal/producer/order_producer"
 	"order/internal/repository"
 	"order/internal/service"
+
+	"github.com/google/uuid"
 )
 
 // InventoryClient описывает требования сервиса к работе со складом
@@ -24,16 +26,19 @@ type srv struct {
 	orderRepo       repository.OrderRepository
 	inventoryClient InventoryClient
 	paymentClient   PaymentClient
+	orderProducer   order_producer.OrderProducer
 }
 
 func NewService(
 	orderRepo repository.OrderRepository,
 	inventoryClient InventoryClient,
 	paymentClient PaymentClient,
+	orderProducer order_producer.OrderProducer,
 ) service.OrderService {
 	return &srv{
 		orderRepo:       orderRepo,
 		inventoryClient: inventoryClient,
 		paymentClient:   paymentClient,
+		orderProducer:   orderProducer,
 	}
 }
