@@ -3,10 +3,12 @@ package order_consumer
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
-	"assembly/internal/converter/kafka/decoder"
+	// ИСПРАВЛЕНО: Импортируем продюсер из пакета assembly, а не order
 	"assembly/internal/service/producer/order_producer"
+
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/logger"
 	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
@@ -23,30 +25,29 @@ func NewOrderPaidHandler(producer order_producer.AssemblyProducer) *OrderPaidHan
 }
 
 func (h *OrderPaidHandler) Handle(ctx context.Context, msg consumer.Message) error {
-	var protoEvent pbEvents.OrderPaidEvent
-	if err := proto.Unmarshal(msg.Value, &protoEvent); err != nil {
+	var event pbEvents.OrderPaidEvent
+	if err := proto.Unmarshal(msg.Value, &event); err != nil {
 		return fmt.Errorf("failed to unmarshal OrderPaidEvent: %w", err)
 	}
 
-	event := decoder.ToOrderPaidModel(&protoEvent)
-	logger.Info(ctx, fmt.Sprintf("[Assembly] Received OrderPaid event for order %s", event.OrderUUID))
+	logger.Info(ctx, fmt.Sprintf("Получено событие оплаты заказа %s. Передаем на верфь для сборки...", event.GetOrderUuid()))
 
 	go func(orderUUID, userUUID string) {
 		bgCtx := context.Background()
 
-		buildTime := int64(10)
-		logger.Info(bgCtx, fmt.Sprintf("[Assembly] Starting construction for order %s. Wait time: %d sec", orderUUID, buildTime))
+		buildTime := int64(rand.Intn(10) + 1)
+		logger.Info(bgCtx, fmt.Sprintf("Начинается сборка корабля для заказа %s. Время сборки: %d сек.", orderUUID, buildTime))
 
 		time.Sleep(time.Duration(buildTime) * time.Second)
 
 		err := h.producer.PublishShipAssembled(bgCtx, orderUUID, userUUID, buildTime)
 		if err != nil {
-			logger.Error(bgCtx, fmt.Sprintf("[Assembly] Failed to publish ShipAssembled event for order %s: %v", orderUUID, err))
+			logger.Error(bgCtx, fmt.Sprintf("Не удалось отправить событие ShipAssembled для заказа %s: %v", orderUUID, err))
 			return
 		}
 
-		logger.Info(bgCtx, fmt.Sprintf("[Assembly] Ship %s successfully assembled and sent!", orderUUID))
-	}(event.OrderUUID, event.UserUUID)
+		logger.Info(bgCtx, fmt.Sprintf("Корабль для заказа %s успешно собран и готов к отправке!", orderUUID))
+	}(event.GetOrderUuid(), event.GetUserUuid())
 
 	return nil
 }
