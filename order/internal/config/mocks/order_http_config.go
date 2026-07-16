@@ -13,12 +13,12 @@ type OrderHttpConfig struct {
 	mock.Mock
 }
 
-// GetAddress provides a mock function with no fields
-func (_m *OrderHttpConfig) GetAddress() string {
+// Address provides a mock function with no fields
+func (_m *OrderHttpConfig) Address() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetAddress")
+		panic("no return value specified for Address")
 	}
 
 	var r0 string
@@ -31,12 +31,12 @@ func (_m *OrderHttpConfig) GetAddress() string {
 	return r0
 }
 
-// GetReadTimeout provides a mock function with no fields
-func (_m *OrderHttpConfig) GetReadTimeout() time.Duration {
+// ReadTimeout provides a mock function with no fields
+func (_m *OrderHttpConfig) ReadTimeout() time.Duration {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetReadTimeout")
+		panic("no return value specified for ReadTimeout")
 	}
 
 	var r0 time.Duration

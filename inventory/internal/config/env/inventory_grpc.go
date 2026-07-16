@@ -22,4 +22,4 @@ func NewInventoryGrpcConfig() (*inventoryGrpcConfig, error) {
 	}, nil
 }
 
-func (cfg *inventoryGrpcConfig) GetAddress() string { return cfg.address }
+func (cfg *inventoryGrpcConfig) Address() string { return cfg.address }

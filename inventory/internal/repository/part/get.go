@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	repoModel "inventory/internal/repository/model"
-
-	"inventory/internal/model"
-	"inventory/internal/repository/converter"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"inventory/internal/model"
+	"inventory/internal/repository/converter"
+	repoModel "inventory/internal/repository/model"
 )
 
 // Реализация метода Get для интерфейса

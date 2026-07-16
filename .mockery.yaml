@@ -1,0 +1,45 @@
+with-expecter: true
+case: underscore
+packages:
+  # Inventory Service
+  inventory/internal/config:
+    config:
+      all: true
+      dir: inventory/internal/config/mocks
+      outpkg: mocks
+  inventory/internal/repository:
+    config:
+      all: true
+      dir: inventory/internal/repository/mocks
+      outpkg: mocks
+
+  # Order Service
+  order/internal/config:
+    config:
+      all: true
+      dir: order/internal/config/mocks
+      outpkg: mocks
+  order/internal/repository:
+    config:
+      all: true
+      dir: order/internal/repository/mocks
+      outpkg: mocks
+  order/internal/producer/order_producer:
+    config:
+      all: true
+      dir: order/internal/producer/order_producer/mocks
+      outpkg: mocks
+
+  # Payment Service
+  payment/internal/config:
+    config:
+      all: true
+      dir: payment/internal/config/mocks
+      outpkg: mocks
+
+  # Assembly Service
+  assembly/internal/service/producer/order_producer:
+    config:
+      all: true
+      dir: assembly/internal/service/producer/order_producer/mocks
+      outpkg: mocks

@@ -3,11 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
-	"inventory/internal/config"
 	"net"
 	"syscall"
 
 	apiV1 "inventory/internal/api/inventory/v1"
+	"inventory/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
@@ -31,7 +31,7 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	err = logger.Init(cfg.GetLogLevel(), cfg.GetLogAsJSON())
+	err = logger.Init(cfg.LogLevel(), cfg.LogAsJSON())
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
@@ -71,12 +71,12 @@ func (a *App) initGrpcServer(ctx context.Context) error {
 func (a *App) Run() error {
 	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
 
-	lis, err := net.Listen("tcp", a.serviceProvider.cfg.GetAddress())
+	lis, err := net.Listen("tcp", a.serviceProvider.cfg.Address())
 	if err != nil {
 		return fmt.Errorf("failed to listen port: %w", err)
 	}
 
-	logger.Info(context.Background(), fmt.Sprintf("Inventory gRPC Server успешно запущен на %s", a.serviceProvider.cfg.GetAddress()))
+	logger.Info(context.Background(), fmt.Sprintf("Inventory gRPC Server успешно запущен на %s", a.serviceProvider.cfg.Address()))
 
 	if err := a.grpcServer.Serve(lis); err != nil && err != grpc.ErrServerStopped {
 		return fmt.Errorf("grpc server failure: %w", err)

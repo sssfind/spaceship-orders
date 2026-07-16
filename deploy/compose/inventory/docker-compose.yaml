@@ -4,6 +4,20 @@ services:
     container_name: inventory_mongo
     ports:
       - "27017:27017"
+    environment:
+
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "echo 'db.runCommand({ ping: 1 }).ok' | mongosh --quiet -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase $${MONGO_AUTH_DB}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
     networks:
       - spaceship_network
     volumes:
@@ -28,3 +42,4 @@ volumes:
 networks:
   spaceship_network:
     external: true
+    name: spaceship_network

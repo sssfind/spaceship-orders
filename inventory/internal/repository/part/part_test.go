@@ -19,7 +19,8 @@ func setupTestCollection(t *testing.T) *mongo.Collection {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	mongoURI := "mongodb://root:secretpassword@localhost:27017/?authSource=admin"
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		t.Fatalf("ошибка подключения к тестовой Mongo: %v", err)
 	}

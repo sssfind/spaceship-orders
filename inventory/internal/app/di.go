@@ -3,15 +3,15 @@ package app
 import (
 	"context"
 	"fmt"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"inventory/internal/config"
 	"inventory/internal/repository"
 	repoPart "inventory/internal/repository/part"
 	"inventory/internal/service"
 	implPart "inventory/internal/service/part"
 	"platform/pkg/closer"
-
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type serviceProvider struct {

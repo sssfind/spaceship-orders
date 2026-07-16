@@ -273,14 +273,10 @@ tasks:
       - test -x {{.MOCKERY}}
 
   mockery:gen:
-    desc: "Генерация моков для интерфейсов конфигурации и репозиториев"
+    desc: "Генерация моков для всех интерфейсов через конфигурацию пакетов"
     cmds:
       - echo "🧪 Генерация моков..."
-      - cd inventory && ../bin/mockery --all --dir=./internal/config --output=./internal/config/mocks --case=snake
-      - cd inventory && ../bin/mockery --all --dir=./internal/repository --output=./internal/repository/mocks --case=snake
-      - cd order && ../bin/mockery --all --dir=./internal/config --output=./internal/config/mocks --case=snake
-      - cd order && ../bin/mockery --all --dir=./internal/repository --output=./internal/repository/mocks --case=snake
-      - cd payment && ../bin/mockery --all --dir=./internal/config --output=./internal/config/mocks --case=snake
+      - ./bin/mockery
 
   test-coverage:
     desc: "Тесты с покрытием бизнес-логики (service/repository), отчёт по каждому модулю + общий"

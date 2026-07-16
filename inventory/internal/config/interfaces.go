@@ -1,12 +1,12 @@
 package config
 
 type LoggerConfig interface {
-	GetLogLevel() string
-	GetLogAsJSON() bool
+	LogLevel() string
+	LogAsJSON() bool
 }
 
 type InventoryGrpcConfig interface {
-	GetAddress() string
+	Address() string
 }
 
 type MongoConfig interface {

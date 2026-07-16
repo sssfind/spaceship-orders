@@ -3,9 +3,9 @@ package order
 import (
 	"context" // Не забудь добавить импорт пакета context!
 	"fmt"
-	"order/internal/model"
 
 	"github.com/google/uuid"
+	"order/internal/model"
 )
 
 func (r *repo) UpdateStatus(ctx context.Context, orderUUID string, status model.OrderStatus, txUUID string, method model.PaymentMethod) error {
@@ -36,7 +36,6 @@ func (r *repo) UpdateStatus(ctx context.Context, orderUUID string, status model.
 		targetPayMethod,
 		orderUUID,
 	)
-
 	if err != nil {
 		return fmt.Errorf("repository: error updating status: %w", err)
 	}
@@ -44,6 +43,6 @@ func (r *repo) UpdateStatus(ctx context.Context, orderUUID string, status model.
 	if cmdTag.RowsAffected() == 0 {
 		return model.ErrOrderNotFound
 	}
-	
+
 	return nil
 }

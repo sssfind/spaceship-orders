@@ -9,12 +9,12 @@ type LoggerConfig struct {
 	mock.Mock
 }
 
-// GetLogAsJSON provides a mock function with no fields
-func (_m *LoggerConfig) GetLogAsJSON() bool {
+// LogAsJSON provides a mock function with no fields
+func (_m *LoggerConfig) LogAsJSON() bool {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetLogAsJSON")
+		panic("no return value specified for LogAsJSON")
 	}
 
 	var r0 bool
@@ -27,12 +27,12 @@ func (_m *LoggerConfig) GetLogAsJSON() bool {
 	return r0
 }
 
-// GetLogLevel provides a mock function with no fields
-func (_m *LoggerConfig) GetLogLevel() string {
+// LogLevel provides a mock function with no fields
+func (_m *LoggerConfig) LogLevel() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetLogLevel")
+		panic("no return value specified for LogLevel")
 	}
 
 	var r0 string

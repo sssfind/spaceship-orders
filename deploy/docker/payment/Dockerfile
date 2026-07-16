@@ -3,12 +3,14 @@ FROM golang:1.26-alpine AS builder
 WORKDIR /app
 
 COPY go.work go.work.sum ./
+
 COPY go.mod go.sum ./
 COPY shared/go.mod shared/go.sum* ./shared/
 COPY inventory/go.mod inventory/go.sum* ./inventory/
 COPY order/go.mod order/go.sum* ./order/
 COPY payment/go.mod payment/go.sum* ./payment/
 COPY platform/go.mod platform/go.sum* ./platform/
+COPY assembly/go.mod assembly/go.sum* ./assembly/
 
 RUN go mod download
 

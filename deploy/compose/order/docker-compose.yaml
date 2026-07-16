@@ -13,10 +13,11 @@ services:
     volumes:
       - orders_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d spaceship_orders" ]
-      interval: 3s
-      timeout: 3s
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-spaceship_orders}" ]
+      interval: 10s
+      timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   order_app:
     image: order:latest
@@ -25,12 +26,19 @@ services:
       context: ../../../
       dockerfile: deploy/docker/order/Dockerfile
     ports:
-      - "8080:8080"
+      - "${ORDER_HTTP_PORT:-8081}:8080"
+    env_file:
+      - .env
+      - ../assembly/.env
     environment:
-      - DATABASE_URL=postgres://postgres:superpassword@orders_postgres:5432/spaceship_orders?sslmode=disable
-      
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-superpassword}@orders_postgres:5432/${POSTGRES_DB:-spaceship_orders}?sslmode=disable
       - INVENTORY_GRPC_ADDR=inventory_service:50051
       - PAYMENT_GRPC_ADDR=payment_service:50052
+
+      - KAFKA_BROKERS=kafka:29092
+      - KAFKA_ORDER_PAID_TOPIC=${ASSEMBLY_ORDER_PAID_TOPIC_NAME}
+      - KAFKA_SHIP_ASSEMBLED_TOPIC=${ASSEMBLY_ORDER_ASSEMBLED_TOPIC_NAME}
+      - KAFKA_SHIP_ASSEMBLED_GROUP_ID=order-service-group
     networks:
       - spaceship_network
     depends_on:
@@ -43,3 +51,4 @@ volumes:
 networks:
   spaceship_network:
     external: true
+    name: spaceship_network

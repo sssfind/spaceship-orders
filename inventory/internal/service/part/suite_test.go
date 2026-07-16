@@ -4,11 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
 	repoMocks "inventory/internal/repository/mocks"
 	"inventory/internal/service"
 	partService "inventory/internal/service/part"
-
-	"github.com/stretchr/testify/suite"
 )
 
 type PartServiceTestSuite struct {

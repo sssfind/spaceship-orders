@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package events.v1;
+
+option go_package = "order/shared/pkg/proto/events/v1";
+
+// OrderPaidEvent публикуется в Kafka после того, как заказ был успешно оплачен.
+message OrderPaidEvent {
+  string event_uuid = 1;
+  string order_uuid = 2;
+  string user_uuid = 3;
+  string payment_method = 4;
+  string transaction_uuid = 5;
+}
+
+// ShipAssembledEvent публикуется после завершения сборки корабля в AssemblyService.
+message ShipAssembledEvent {
+  string event_uuid = 1;
+  string order_uuid = 2;
+  string user_uuid = 3;
+  int64 build_time_sec = 4;
+}

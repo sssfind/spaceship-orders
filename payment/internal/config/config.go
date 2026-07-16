@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"payment/internal/config/env"
 
 	"github.com/joho/godotenv"
+	"payment/internal/config/env"
 )
 
 type Config struct {

@@ -26,7 +26,6 @@ func (r *repo) Get(ctx context.Context, orderUUID string) (*model.Order, error) 
 		&order.TransactionUUID,
 		&order.PaymentMethod,
 	)
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, model.ErrOrderNotFound

@@ -17,10 +17,13 @@ jobs:
     # Запускаем контейнер с MongoDB рядом с контейнером тестов
     services:
       mongodb:
-        image: mongo:6.0
+        image: mongo:7.0
         ports:
           - 27017:27017
         # Ждем, пока Mongo успешно стартует, прежде чем запускать шаги
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: secretpassword
         options: >-
           --health-cmd "echo 'db.runCommand({ping:1})' | mongosh localhost:27017 --quiet"
           --health-interval 10s

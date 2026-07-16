@@ -4,11 +4,11 @@ package integration
 
 import (
 	"context"
-	"order/internal/repository"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
+	"order/internal/repository"
 )
 
 type OrderTestSuite struct {

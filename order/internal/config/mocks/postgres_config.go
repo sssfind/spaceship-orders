@@ -9,12 +9,12 @@ type PostgresConfig struct {
 	mock.Mock
 }
 
-// GetDSN provides a mock function with no fields
-func (_m *PostgresConfig) GetDSN() string {
+// Dsn provides a mock function with no fields
+func (_m *PostgresConfig) Dsn() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetDSN")
+		panic("no return value specified for Dsn")
 	}
 
 	var r0 string
@@ -27,12 +27,12 @@ func (_m *PostgresConfig) GetDSN() string {
 	return r0
 }
 
-// GetMigrationDir provides a mock function with no fields
-func (_m *PostgresConfig) GetMigrationDir() string {
+// MigrationDir provides a mock function with no fields
+func (_m *PostgresConfig) MigrationDir() string {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetMigrationDir")
+		panic("no return value specified for MigrationDir")
 	}
 
 	var r0 string

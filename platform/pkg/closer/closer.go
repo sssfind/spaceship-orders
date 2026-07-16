@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"platform/pkg/logger"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"platform/pkg/logger"
 )
 
 // shutdownTimeout по умолчанию, можно сделать параметром

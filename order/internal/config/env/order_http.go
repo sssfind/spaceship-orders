@@ -39,10 +39,10 @@ func NewOrderHTTPConfig() (*orderHTTP, error) {
 	}, nil
 }
 
-func (cfg *orderHTTP) GetAddress() string {
+func (cfg *orderHTTP) Address() string {
 	return cfg.address
 }
 
-func (cfg *orderHTTP) GetReadTimeout() time.Duration {
+func (cfg *orderHTTP) ReadTimeout() time.Duration {
 	return cfg.timeout
 }

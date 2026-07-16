@@ -2,12 +2,12 @@ package part
 
 import (
 	"context"
-	repoModel "inventory/internal/repository/model"
 	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	repoModel "inventory/internal/repository/model"
 )
 
 func (r *repo) initTestData() {

@@ -3,14 +3,13 @@ package part
 import (
 	"context"
 	"fmt"
-	"inventory/internal/repository/converter"
-	repoModel "inventory/internal/repository/model"
 	"log"
-
-	domainModel "inventory/internal/model"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	domainModel "inventory/internal/model"
+	"inventory/internal/repository/converter"
+	repoModel "inventory/internal/repository/model"
 )
 
 func (r *repo) List(ctx context.Context, filter *domainModel.PartsFilter) ([]domainModel.Part, error) {
@@ -69,6 +68,6 @@ func (r *repo) List(ctx context.Context, filter *domainModel.PartsFilter) ([]dom
 	if err := cursor.Err(); err != nil {
 		return nil, fmt.Errorf("cursor err: %w", err)
 	}
-	
+
 	return result, nil
 }
