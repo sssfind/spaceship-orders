@@ -1,6 +1,6 @@
 services:
   orders_db:
-    image: postgres:16-alpine
+    image: postgres:17.0-alpine3.20
     container_name: orders_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
