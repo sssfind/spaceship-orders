@@ -5,6 +5,10 @@ services:
     container_name: postgres-iam
     env_file:
       - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_iam_data:/var/lib/postgresql/data
     ports:
@@ -25,7 +29,6 @@ services:
       - .env
     ports:
       - "${EXTERNAL_REDIS_PORT}:6379"
-
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
@@ -35,6 +38,25 @@ services:
     networks:
       - spaceship_network
 
+  iam:
+    image: iam:latest
+    container_name: iam_service
+    build:
+      context: ../../../
+      dockerfile: deploy/docker/iam/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${GRPC_PORT}:${GRPC_PORT}"
+    depends_on:
+      postgres-iam:
+        condition: service_healthy
+      redis-iam:
+        condition: service_healthy
+    networks:
+      - spaceship_network
+    restart: unless-stopped
+
 volumes:
   postgres_iam_data:
 
@@ -42,4 +64,3 @@ networks:
   spaceship_network:
     external: true
     name: spaceship_network
-

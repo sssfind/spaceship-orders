@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package common.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "spaceship-orders/shared/pkg/proto/common/v1;commonv1";    
+// Структура сессии для хранения в Redis
+message Session {
+  string session_uuid = 1;
+  string user_uuid = 2;
+  google.protobuf.Timestamp created_at = 3;
+}

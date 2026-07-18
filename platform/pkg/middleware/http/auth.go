@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	grpcAuth "github.com/olezhek28/microservices-course-olezhek-solution/platform/pkg/middleware/grpc"
-	authV1 "github.com/olezhek28/microservices-course-olezhek-solution/shared/pkg/proto/auth/v1"
-	commonV1 "github.com/olezhek28/microservices-course-olezhek-solution/shared/pkg/proto/common/v1"
+	grpcAuth "platform/pkg/middleware/grpc"
+	authV1 "spaceship-orders/shared/pkg/proto/auth/v1"
+
+	commonV1 "spaceship-orders/shared/pkg/proto/common/v1"
 )
 
 const SessionUUIDHeader = "X-Session-Uuid"

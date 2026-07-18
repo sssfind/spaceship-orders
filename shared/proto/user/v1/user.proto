@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "spaceship-orders/shared/pkg/proto/user/v1;userv1";
+import "common/v1/user.proto";
+
+service UserService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}
+
+// Поля регистрации для пользователя
+message RegisterRequest {
+  string login = 1;
+  string password = 2;
+  string email = 3;
+  repeated common.v1.NotificationMethod notification_methods = 4;
+}
+
+// Ответ на регистрацию
+message RegisterResponse {
+  string user_uuid = 1;
+}
+
+// UUID пользователя для запроса
+message GetUserRequest {
+  string user_uuid = 1;
+}
+
+// Выдача пользователя
+message GetUserResponse {
+  common.v1.User user = 1;
+}

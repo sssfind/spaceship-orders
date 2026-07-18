@@ -43,3 +43,15 @@ packages:
       all: true
       dir: assembly/internal/service/producer/order_producer/mocks
       outpkg: mocks
+
+  #IAM Service
+  iam/internal/service:
+    config:
+      all: true
+      dir: iam/internal/service/mocks
+      outpkg: mocks
+  iam/internal/repository:
+    config:
+      all: true
+      dir: iam/internal/repository/mocks
+      outpkg: mocks

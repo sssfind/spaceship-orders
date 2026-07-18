@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 )
 
 type App struct {
@@ -48,6 +49,8 @@ func NewApp(ctx context.Context) (*App, error) {
 
 func (a *App) initGrpcServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+
+	reflection.Register(a.grpcServer)
 
 	healthCheckServer := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(a.grpcServer, healthCheckServer)

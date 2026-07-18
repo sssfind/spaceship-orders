@@ -2,34 +2,13 @@ syntax = "proto3";
 
 package auth.v1;
 
-// Путь для генерации go-кода в рамках твоей структуры проекта
-option go_package = "shared/pkg/proto/auth/v1;authv1";
+option go_package = "spaceship-orders/shared/pkg/proto/auth/v1;authv1";
+import "common/v1/user.proto";
 
 // Сервис управления пользователями и сессиями
 service AuthService {
-  rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Whoami(WhoamiRequest) returns (WhoamiResponse);
-  rpc GetUser(GetUserRequest) returns (GetUserResponse);
-}
-
-// Способ уведомления пользователя
-message NotificationMethod {
-  string provider_name = 1; // например, "telegram", "email"
-  string target = 2;        // адрес получателя (email или chat_id)
-}
-
-// Запрос на регистрацию нового аккаунта
-message RegisterRequest {
-  string login = 1;
-  string password = 2;
-  string email = 3;
-  repeated NotificationMethod notification_methods = 4;
-}
-
-// Ответ при успешной регистрации
-message RegisterResponse {
-  string user_uuid = 1;
 }
 
 // Запрос на аутентификацию
@@ -50,20 +29,5 @@ message WhoamiRequest {
 
 // Ответ с базовыми данными пользователя из сессии
 message WhoamiResponse {
-  string user_uuid = 1;
-  string login = 2;
-  string email = 3;
-}
-
-// Запрос на получение профиля пользователя по его UUID
-message GetUserRequest {
-  string user_uuid = 1;
-}
-
-// Полные данные профиля пользователя
-message GetUserResponse {
-  string user_uuid = 1;
-  string login = 2;
-  string email = 3;
-  repeated NotificationMethod notification_methods = 4;
+  common.v1.User user = 1;
 }

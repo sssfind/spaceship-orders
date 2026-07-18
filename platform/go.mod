@@ -6,6 +6,7 @@ require (
 	github.com/IBM/sarama v1.60.0
 	github.com/docker/go-connections v0.7.0
 	github.com/go-faster/errors v0.7.1
+	github.com/gomodule/redigo v1.9.3
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/moby/moby/api v1.55.0
 	github.com/pkg/errors v0.9.1

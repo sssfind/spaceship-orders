@@ -2,9 +2,11 @@ package order
 
 import (
 	"context"
+	"fmt"
+
+	"order/internal/model"
 
 	"github.com/google/uuid"
-	"order/internal/model"
 )
 
 func (s *srv) PayOrder(ctx context.Context, orderUUID uuid.UUID, method model.PaymentMethod) (uuid.UUID, error) {
@@ -41,6 +43,11 @@ func (s *srv) PayOrder(ctx context.Context, orderUUID uuid.UUID, method model.Pa
 	err = s.orderRepo.UpdateStatus(ctx, order.OrderUUID.String(), model.StatusPaid, txStr, method)
 	if err != nil {
 		return uuid.Nil, err
+	}
+
+	err = s.orderProducer.PublishOrderPaid(ctx, order.OrderUUID.String(), order.UserUUID.String(), string(method), txStr)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("failed to publish order paid event: %w", err)
 	}
 
 	return txUUID, nil

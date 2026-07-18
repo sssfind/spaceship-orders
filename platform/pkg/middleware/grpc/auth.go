@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	authV1 "github.com/olezhek28/microservices-course-olezhek-solution/shared/pkg/proto/auth/v1"
-	commonV1 "github.com/olezhek28/microservices-course-olezhek-solution/shared/pkg/proto/common/v1"
+	authV1 "spaceship-orders/shared/pkg/proto/auth/v1"
+	commonV1 "spaceship-orders/shared/pkg/proto/common/v1"
 )
 
 const (
