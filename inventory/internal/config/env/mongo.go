@@ -25,12 +25,12 @@ func NewMongoConfig() (*mongoConfig, error) {
 
 	var uri string
 	if user != "" && pass != "" {
-		uri = fmt.Errorf("mongodb://%s:%s@%s:%s", user, pass, host, port).Error()
+		uri = fmt.Sprintf("mongodb://%s:%s@%s:%s/%s", user, pass, host, port, dbName)
 		if authDB != "" {
 			uri += fmt.Sprintf("?authSource=%s", authDB)
 		}
 	} else {
-		uri = fmt.Sprintf("mongodb://%s:%s", host, port)
+		uri = fmt.Sprintf("mongodb://%s:%s/%s", host, port, dbName)
 	}
 
 	return &mongoConfig{

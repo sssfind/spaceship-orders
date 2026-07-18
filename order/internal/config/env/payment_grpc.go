@@ -11,10 +11,10 @@ type paymentGrpc struct {
 }
 
 func NewPaymentGrpcConfig() (*paymentGrpc, error) {
-	host := os.Getenv("INVENTORY_GRPC_HOST")
-	port := os.Getenv("INVENTORY_GRPC_PORT")
+	host := os.Getenv("PAYMENT_GRPC_HOST")
+	port := os.Getenv("PAYMENT_GRPC_PORT")
 	if host == "" || port == "" {
-		return nil, errors.New("GRPC_HOST and PORT is not set")
+		return nil, errors.New("PAYMENT GRPC_HOST and PORT is not set")
 	}
 
 	return &paymentGrpc{

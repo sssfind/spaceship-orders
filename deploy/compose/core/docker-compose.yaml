@@ -65,6 +65,10 @@ services:
       dockerfile: deploy/docker/payment/Dockerfile
     ports:
       - "50052:50052"
+    env_file:
+      - ../payment/.env
+    environment:
+      - GRPC_HOST=0.0.0.0
     networks:
       - spaceship_network
     restart: unless-stopped
@@ -80,6 +84,9 @@ services:
       - ../assembly/.env
     environment:
       - KAFKA_BROKERS=kafka:${KAFKA_INTERNAL_PORT:-29092}
+      - KAFKA_ORDER_PAID_TOPIC=order-paid
+      - KAFKA_ORDER_PAID_GROUP_ID=assembly-group
+      - KAFKA_SHIP_ASSEMBLED_TOPIC=ship-assembled
     depends_on:
       kafka:
         condition: service_healthy

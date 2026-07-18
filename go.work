@@ -8,4 +8,5 @@ use (
 	./shared
 	./platform
 	./assembly
+	./iam
 )

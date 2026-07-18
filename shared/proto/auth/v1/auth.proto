@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "spaceship-orders/shared/pkg/proto/auth/v1;authv1";
+import "common/v1/user.proto";
+
+// Сервис управления пользователями и сессиями
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Whoami(WhoamiRequest) returns (WhoamiResponse);
+}
+
+// Запрос на аутентификацию
+message LoginRequest {
+  string login = 1;
+  string password = 2;
+}
+
+// Ответ с токеном активной сессии
+message LoginResponse {
+  string session_uuid = 1;
+}
+
+// Запрос для получения текущей сессии
+message WhoamiRequest {
+  string session_uuid = 1;
+}
+
+// Ответ с базовыми данными пользователя из сессии
+message WhoamiResponse {
+  common.v1.User user = 1;
+}

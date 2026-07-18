@@ -10,7 +10,7 @@ import (
 
 	"assembly/internal/config"
 	"platform/pkg/closer"
-	"platform/pkg/logger" // Твой пакет логгера[cite: 15]
+	"platform/pkg/logger"
 )
 
 type App struct {
@@ -36,8 +36,6 @@ func NewApp(ctx context.Context) (*App, error) {
 func (a *App) Run(ctx context.Context) error {
 	closer.SetLogger(logger.Logger())
 
-	// 2. Регистрируем закрытие ресурсов через AddNamed.
-	// Благодаря этому ты увидишь в консоли аккуратные отчеты по каждому ресурсу[cite: 18].
 	closer.AddNamed("Logger Sync", func(_ context.Context) error {
 		return logger.Sync()
 	})
@@ -56,27 +54,27 @@ func (a *App) Run(ctx context.Context) error {
 		return nil
 	})
 
-	// 3. Получаем и запускаем консьюмер в фоновой горутине
 	cons, err := a.serviceProvider.OrderConsumer()
 	if err != nil {
 		return err
 	}
+	cfg := a.serviceProvider.cfg
+	fmt.Fprintf(os.Stderr, "!!! DEBUG: Brokers=%v, GroupID=%s, Topic=%s\n", cfg.Brokers(), cfg.GroupID(), cfg.PaidTopic())
 
 	go func() {
 		logger.Info(ctx, "Assembly Service Kafka Consumer is starting...")
 		if err := cons.Run(ctx); err != nil {
+			fmt.Fprintf(os.Stderr, "!!! CRITICAL CONSUMER ERROR: %v\n", err)
 			logger.Error(ctx, fmt.Sprintf("Assembly Consumer stopped with error: %v", err))
 		}
 	}()
 
-	// 4. Блокируем выполнение и ждем сигналы ОС прямо здесь
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	sig := <-sigChan
 	logger.Info(ctx, fmt.Sprintf("Получен системный сигнал %v. Начинаем graceful shutdown...", sig))
 
-	// 5. Вызываем закрытие ресурсов синхронно с таймаутом в 5 секунд
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 

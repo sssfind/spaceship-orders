@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
 
 	// ИСПРАВЛЕНО: Импортируем продюсер из пакета assembly, а не order
@@ -42,6 +43,7 @@ func (h *OrderPaidHandler) Handle(ctx context.Context, msg consumer.Message) err
 
 		err := h.producer.PublishShipAssembled(bgCtx, orderUUID, userUUID, buildTime)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "CRITICAL ERROR: %v\n", err)
 			logger.Error(bgCtx, fmt.Sprintf("Не удалось отправить событие ShipAssembled для заказа %s: %v", orderUUID, err))
 			return
 		}

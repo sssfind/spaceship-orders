@@ -1,19 +1,21 @@
 services:
   orders_db:
-    image: postgres:16-alpine
+    image: postgres:17.0-alpine3.20
     container_name: orders_postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-superpassword}
-      POSTGRES_DB: ${POSTGRES_DB:-spaceship_orders}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${EXTERNAL_POSTGRES_PORT}:5432"
     networks:
       - spaceship_network
     volumes:
       - orders_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-spaceship_orders}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,18 +28,11 @@ services:
       context: ../../../
       dockerfile: deploy/docker/order/Dockerfile
     ports:
-      - "${ORDER_HTTP_PORT:-8081}:8080"
+      - "${HTTP_PORT}:${HTTP_PORT}"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-superpassword}@orders_postgres:5432/${POSTGRES_DB:-spaceship_orders}?sslmode=disable
-      - INVENTORY_GRPC_ADDR=inventory_service:50051
-      - PAYMENT_GRPC_ADDR=payment_service:50052
-
-      - KAFKA_BROKERS=kafka:29092
-      - KAFKA_ORDER_PAID_TOPIC=${ORDER_PAID_TOPIC_NAME}
-      - KAFKA_SHIP_ASSEMBLED_TOPIC=${ORDER_ASSEMBLED_TOPIC_NAME}
-      - KAFKA_SHIP_ASSEMBLED_GROUP_ID=order-service-group
+      KAFKA_SHIP_ASSEMBLED_GROUP_ID: "order-service-group"
     networks:
       - spaceship_network
     depends_on:

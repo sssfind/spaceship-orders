@@ -3,9 +3,10 @@ package order_test
 import (
 	"errors"
 
+	"order/internal/model"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-	"order/internal/model"
 )
 
 // Успешная оплата
@@ -22,15 +23,25 @@ func (s *OrderServiceTestSuite) TestPayOrder_Success() {
 	}
 
 	s.repoMock.On("Get", mock.Anything, orderUUID.String()).Return(existingOrder, nil).Once()
-
 	s.paymentMock.On("Pay", mock.Anything, orderUUID.String(), userUUID.String(), method).Return(txStr, nil).Once()
-
 	s.repoMock.On("UpdateStatus", mock.Anything, orderUUID.String(), model.StatusPaid, txStr, method).Return(nil).Once()
+
+	s.producerMock.On("PublishOrderPaid",
+		mock.Anything,      // ctx
+		orderUUID.String(), // orderUUID
+		userUUID.String(),  // userUUID
+		string(method),     // paymentMethod (приводим к строке, как в коде)
+		txStr,              // transactionUUID
+	).Return(nil).Once() // Успешная отправка
 
 	resTx, err := s.service.PayOrder(s.ctx, orderUUID, method)
 
 	s.NoError(err)
 	s.Equal(txStr, resTx.String())
+
+	s.repoMock.AssertExpectations(s.T())
+	s.paymentMock.AssertExpectations(s.T())
+	s.producerMock.AssertExpectations(s.T())
 }
 
 // Заказ не найден в базе данных
