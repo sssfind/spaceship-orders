@@ -179,9 +179,3 @@ task test-api-with-auth
    - Окружение полностью упаковано в Docker Compose
 - [ ] **Фаза 4: Observability (В процессе)**
    - Инструментирование Go-кода: сбор бизнес-метрик (Prometheus), распределенная трассировка (OpenTelemetry + Jaeger) и централизованное логирование
-- [ ] **Фаза 5: Infrastructure as Code (IaC)**
-   - Автоматизация развертывания отказоустойчивого кластера БД (HA PostgreSQL + Patroni) в облаке с помощью Terraform и Ansible
-- [ ] **Фаза 6: Kubernetes & GitOps**
-   - Развертывание K8s-кластера, упаковка сервисов в Helm-чарты, деплой через ArgoCD и управление секретами через SOPS
-- [ ] **Фаза 7: Chaos Engineering & SRE**
-   - Проведение контролируемых сбоев с помощью Chaos Mesh и генерация нагрузок k6 для проверки показателей RTO/RPO
