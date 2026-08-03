@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"iam/internal/model"
 	"iam/internal/repository/converter"
-	"time"
 )
 
 func (r *sessionRepo) Create(ctx context.Context, s *model.Session, ttl time.Duration) error {

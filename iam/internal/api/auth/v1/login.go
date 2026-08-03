@@ -3,11 +3,11 @@ package v1
 import (
 	"context"
 	"errors"
-	"iam/internal/model"
-	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"iam/internal/model"
+	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
 )
 
 func (i *Implementation) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {

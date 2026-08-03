@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"platform/pkg/kafka"
-	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
-
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
+	"platform/pkg/kafka"
+	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
 )
 
 type OrderProducer interface {

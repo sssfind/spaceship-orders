@@ -4,10 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
 	repoMocks "iam/internal/repository/mocks"
 	"iam/internal/service"
-
-	"github.com/stretchr/testify/suite"
 )
 
 type AuthServiceTestSuite struct {

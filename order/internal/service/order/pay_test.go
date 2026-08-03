@@ -3,10 +3,9 @@ package order_test
 import (
 	"errors"
 
-	"order/internal/model"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
+	"order/internal/model"
 )
 
 // Успешная оплата

@@ -3,12 +3,12 @@ package v1
 import (
 	"context"
 	"errors"
-	"iam/internal/converter"
-	"iam/internal/model"
-	userv1 "spaceship-orders/shared/pkg/proto/user/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"iam/internal/converter"
+	"iam/internal/model"
+	userv1 "spaceship-orders/shared/pkg/proto/user/v1"
 )
 
 func (i *Implementation) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {

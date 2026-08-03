@@ -4,6 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	// Драйверы и внешние либы
+	redigo "github.com/gomodule/redigo/redis"
+	_ "github.com/lib/pq" // Обязательно для работы database/sql с Postgres
+	"go.uber.org/zap"
 	authApi "iam/internal/api/auth/v1"
 	userApi "iam/internal/api/user/v1"
 	"iam/internal/config"
@@ -13,14 +18,7 @@ import (
 	"iam/internal/service"
 	authService "iam/internal/service/auth"
 	userService "iam/internal/service/user"
-
-	// Платформенные пакеты
 	platformRedis "platform/pkg/cache/redis"
-
-	// Драйверы и внешние либы
-	redigo "github.com/gomodule/redigo/redis"
-	_ "github.com/lib/pq" // Обязательно для работы database/sql с Postgres
-	"go.uber.org/zap"
 )
 
 type redisLoggerWrapper struct {

@@ -2,8 +2,9 @@ package repository
 
 import (
 	"context"
-	"iam/internal/model"
 	"time"
+
+	"iam/internal/model"
 )
 
 type UserRepository interface {

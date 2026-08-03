@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+
 	"platform/pkg/kafka/consumer"
 )
 

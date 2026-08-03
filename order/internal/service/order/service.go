@@ -3,12 +3,11 @@ package order
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"order/internal/model"
 	"order/internal/producer/order_producer"
 	"order/internal/repository"
 	"order/internal/service"
-
-	"github.com/google/uuid"
 )
 
 // InventoryClient описывает требования сервиса к работе со складом

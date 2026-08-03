@@ -5,13 +5,12 @@ import (
 	"context"
 	"errors"
 
-	"iam/internal/model"
-	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"iam/internal/model"
+	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
 )
 
 func (s *LoginTestSuite) TestLogin_Success() {

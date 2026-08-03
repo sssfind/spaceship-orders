@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"syscall"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	healthAPI "order/internal/api/health"
 	"order/internal/config"
 	customMiddleware "order/internal/middleware"
@@ -14,9 +16,6 @@ import (
 	"platform/pkg/logger"
 	platformMigrator "platform/pkg/migrator/pg"
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 type App struct {

@@ -4,9 +4,8 @@ package v1
 import (
 	"testing"
 
-	"iam/internal/service/mocks"
-
 	"github.com/stretchr/testify/suite"
+	"iam/internal/service/mocks"
 )
 
 type LoginTestSuite struct {

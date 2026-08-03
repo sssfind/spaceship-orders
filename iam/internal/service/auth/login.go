@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	"iam/internal/model"
-
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"iam/internal/model"
 )
 
 func (s *authService) Login(ctx context.Context, login, password string) (string, error) {
@@ -27,7 +26,7 @@ func (s *authService) Login(ctx context.Context, login, password string) (string
 		UserUUID:    user.UUID,
 		CreatedAt:   time.Now(),
 	}
-	
+
 	err = s.sessionRepo.Create(ctx, session, s.sessionCfg.TTL())
 	if err != nil {
 		return "", err

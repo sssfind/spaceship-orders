@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"platform/pkg/logger"
-	platformMigrator "platform/pkg/migrator/pg"
-
-	"iam/internal/config"
-	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
-	userv1 "spaceship-orders/shared/pkg/proto/user/v1"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"iam/internal/config"
+	"platform/pkg/logger"
+	platformMigrator "platform/pkg/migrator/pg"
+	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
+	userv1 "spaceship-orders/shared/pkg/proto/user/v1"
 )
 
 type App struct {
@@ -88,6 +87,7 @@ func (a *App) initDeps(ctx context.Context) error {
 
 	return nil
 }
+
 func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer()
 

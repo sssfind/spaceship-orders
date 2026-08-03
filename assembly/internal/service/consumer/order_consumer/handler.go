@@ -9,12 +9,10 @@ import (
 
 	// ИСПРАВЛЕНО: Импортируем продюсер из пакета assembly, а не order
 	"assembly/internal/service/producer/order_producer"
-
+	"google.golang.org/protobuf/proto"
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/logger"
 	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
-
-	"google.golang.org/protobuf/proto"
 )
 
 type OrderPaidHandler struct {

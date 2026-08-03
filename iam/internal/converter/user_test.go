@@ -3,10 +3,9 @@ package converter
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"iam/internal/model"
 	commonv1 "spaceship-orders/shared/pkg/proto/common/v1"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestToProtoUser_Success(t *testing.T) {

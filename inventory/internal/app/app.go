@@ -6,17 +6,16 @@ import (
 	"net"
 	"syscall"
 
-	apiV1 "inventory/internal/api/inventory/v1"
-	"inventory/internal/config"
-	"platform/pkg/closer"
-	"platform/pkg/logger"
-	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	apiV1 "inventory/internal/api/inventory/v1"
+	"inventory/internal/config"
+	"platform/pkg/closer"
+	"platform/pkg/logger"
+	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 )
 
 type App struct {

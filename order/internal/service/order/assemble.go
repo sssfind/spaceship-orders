@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"order/internal/model"
-
 	"github.com/google/uuid"
+	"order/internal/model"
 )
 
 func (s *srv) AssembleOrder(ctx context.Context, orderUUID uuid.UUID) error {

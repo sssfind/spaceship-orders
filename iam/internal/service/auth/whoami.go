@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+
 	"iam/internal/model"
 )
 
