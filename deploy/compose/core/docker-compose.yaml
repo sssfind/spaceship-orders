@@ -127,6 +127,10 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
+    volumes:
+      - ../../grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ../../grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ../../grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - spaceship_network
     restart: unless-stopped
@@ -157,6 +161,8 @@ services:
       dockerfile: deploy/docker/assembly/Dockerfile
     env_file:
       - ../assembly/.env
+    ports:
+      - "${ASSEMBLY_HTTP_PORT:-8082}:${ASSEMBLY_HTTP_PORT:-8082}"
     environment:
       - KAFKA_BROKERS=kafka:${KAFKA_INTERNAL_PORT:-29092}
       - KAFKA_ORDER_PAID_TOPIC=order-paid

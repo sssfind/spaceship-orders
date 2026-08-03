@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type App struct {
@@ -89,6 +90,7 @@ func (a *App) initDependencies(ctx context.Context) error {
 	r.Use(customMiddleware.RequestLogger)
 
 	r.Get("/health", healthHandler.HealthCheck)
+	r.Handle("/metrics", promhttp.Handler())
 
 	r.Mount("/", orderServer)
 

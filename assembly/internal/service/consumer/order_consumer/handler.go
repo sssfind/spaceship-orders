@@ -1,6 +1,7 @@
 package order_consumer
 
 import (
+	"assembly/internal/metrics"
 	"context"
 	"fmt"
 	"math/rand"
@@ -9,10 +10,12 @@ import (
 
 	// ИСПРАВЛЕНО: Импортируем продюсер из пакета assembly, а не order
 	"assembly/internal/service/producer/order_producer"
-	"google.golang.org/protobuf/proto"
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/logger"
 	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/protobuf/proto"
 )
 
 type OrderPaidHandler struct {
@@ -24,6 +27,9 @@ func NewOrderPaidHandler(producer order_producer.AssemblyProducer) *OrderPaidHan
 }
 
 func (h *OrderPaidHandler) Handle(ctx context.Context, msg consumer.Message) error {
+	timer := prometheus.NewTimer(metrics.AssemblyDurationSeconds)
+	defer timer.ObserveDuration()
+
 	var event pbEvents.OrderPaidEvent
 	if err := proto.Unmarshal(msg.Value, &event); err != nil {
 		return fmt.Errorf("failed to unmarshal OrderPaidEvent: %w", err)

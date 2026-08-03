@@ -1,0 +1,69 @@
+{
+  "id": null,
+  "title": "Spaceship Orders Metrics",
+  "description": "Дашборд мониторинга Order и Assembly сервисов",
+  "tags": ["spaceship", "orders", "assembly"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Orders",
+      "description": "Общее количество созданных заказов",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "orders_total",
+          "legendFormat": "Created Orders",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-uid"
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Total Revenue",
+      "description": "Суммарная выручка по заказам",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "orders_revenue_total",
+          "legendFormat": "Revenue",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-uid"
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Assembly Duration p95",
+      "description": "95-й перцентиль времени сборки корабля",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(assembly_duration_seconds_bucket[1m])) by (le))",
+          "legendFormat": "Assembly p95",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-uid"
+          }
+        }
+      ]
+    }
+  ],
+  "version": 1,
+  "uid": "spaceship-orders-overview",
+  "schemaVersion": 30
+}

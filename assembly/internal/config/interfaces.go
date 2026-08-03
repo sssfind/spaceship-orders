@@ -21,9 +21,14 @@ type OrderAssembledProducerConfig interface {
 	AssembledTopic() string
 }
 
+type HTTPConfig interface {
+	Address() string
+}
+
 type Config interface {
 	KafkaConfig
 	LoggerConfig
 	OrderPaidConsumerConfig
 	OrderAssembledProducerConfig
+	HTTPConfig
 }

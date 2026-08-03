@@ -17,8 +17,6 @@ exporters:
   elasticsearch:
     endpoints: ["http://elasticsearch:9200"]
     logs_index: "logs-otel-default"
-    logs_data_stream:
-      enabled: false
     tls:
       insecure: true
 
