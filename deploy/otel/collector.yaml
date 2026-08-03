@@ -1,0 +1,57 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+    max_recv_msg_size: 4194304
+    keepalive:
+      server_parameters:
+        time: 30s
+        timeout: 5s
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+  probabilistic_sampler:
+    sampling_percentage: 100
+
+exporters:
+  elasticsearch:
+    endpoints: ["http://elasticsearch:9200"]
+    logs_index: "otel-logs-%{+yyyy.MM.dd}"
+    tls:
+      insecure: true
+    mapping:
+      mode: ecs
+
+  otlp/jaeger:
+    endpoint: "jaeger:4317"
+    tls:
+      insecure: true
+
+  debug:
+    verbosity: basic
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+
+  telemetry:
+    # Метрики самого коллектора для мониторинга его состояния
+    metrics:
+      address: 0.0.0.0:8888 
+
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [elasticsearch, debug]
+    traces:
+      receivers: [otlp]
+      processors: [probabilistic_sampler, batch]
+      exporters: [otlp/jaeger, debug]
