@@ -5,11 +5,6 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
-    max_recv_msg_size: 4194304
-    keepalive:
-      server_parameters:
-        time: 30s
-        timeout: 5s
 
 processors:
   batch:
@@ -21,11 +16,11 @@ processors:
 exporters:
   elasticsearch:
     endpoints: ["http://elasticsearch:9200"]
-    logs_index: "otel-logs-%{+yyyy.MM.dd}"
+    logs_index: "logs-otel-default"
+    logs_data_stream:
+      enabled: false
     tls:
       insecure: true
-    mapping:
-      mode: ecs
 
   otlp/jaeger:
     endpoint: "jaeger:4317"
@@ -40,12 +35,7 @@ extensions:
     endpoint: 0.0.0.0:13133
 
 service:
-
-  telemetry:
-    # Метрики самого коллектора для мониторинга его состояния
-    metrics:
-      address: 0.0.0.0:8888 
-
+  extensions: [health_check]
   pipelines:
     logs:
       receivers: [otlp]

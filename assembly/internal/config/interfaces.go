@@ -6,6 +6,10 @@ type KafkaConfig interface {
 
 type LoggerConfig interface {
 	LogLevel() string
+	LogAsJSON() bool
+	ServiceName() string
+	Outputs() []string
+	OtelCollectorEndpoint() string
 }
 
 type OrderPaidConsumerConfig interface {

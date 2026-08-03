@@ -9,6 +9,10 @@ type GRPCConfig interface {
 type LoggerConfig interface {
 	Level() string
 	AsJSON() bool
+	ServiceName() string
+	Outputs() []string
+	OtelCollectorEndpoint() string
+
 }
 
 type PostgresConfig interface {

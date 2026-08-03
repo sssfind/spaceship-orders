@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"syscall"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	healthAPI "order/internal/api/health"
 	"order/internal/config"
 	customMiddleware "order/internal/middleware"
@@ -16,6 +14,9 @@ import (
 	"platform/pkg/logger"
 	platformMigrator "platform/pkg/migrator/pg"
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type App struct {
@@ -32,15 +33,25 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Инициализируем глобальный структурированный логгер платформы
-	err = logger.Init(cfg.LogLevel(), cfg.LogAsJSON())
+	// Инициализируем платформенный логгер с поддержкой мульти-кора
+	err = logger.InitWithConfig(logger.Config{
+		Level:                 cfg.LogLevel(),
+		AsJSON:                cfg.LogAsJSON(),
+		ServiceName:           cfg.ServiceName(),
+		Outputs:               cfg.Outputs(),
+		OtelCollectorEndpoint: cfg.OtelCollectorEndpoint(),
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
 
+	closer.AddNamed("logger", func(c context.Context) error {
+		return logger.Shutdown(c)
+	})
+
 	a.serviceProvider = newServiceProvider(cfg)
 
-	// Инициализируем базовую инфраструктуру и сервер
 	err = a.initDependencies(ctx)
 	if err != nil {
 		return nil, err
@@ -50,7 +61,6 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 func (a *App) initDependencies(ctx context.Context) error {
-	// Накатываем миграции БД через платформенную библиотеку
 	dbMigrator := platformMigrator.NewMigrator(
 		a.serviceProvider.cfg.Dsn(),
 		a.serviceProvider.cfg.MigrationDir(),

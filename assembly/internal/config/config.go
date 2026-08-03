@@ -42,8 +42,12 @@ func NewConfig() (Config, error) {
 	}, nil
 }
 
-func (c *cfg) Brokers() []string      { return c.kafkaConfig.Brokers() }
-func (c *cfg) LogLevel() string       { return c.loggerConfig.LogLevel() }
-func (c *cfg) PaidTopic() string      { return c.orderPaidConsumerConfig.PaidTopic() }
-func (c *cfg) GroupID() string        { return c.orderPaidConsumerConfig.GroupID() }
-func (c *cfg) AssembledTopic() string { return c.orderAssembledProducerConfig.AssembledTopic() }
+func (c *cfg) Brokers() []string             { return c.kafkaConfig.Brokers() }
+func (c *cfg) PaidTopic() string             { return c.orderPaidConsumerConfig.PaidTopic() }
+func (c *cfg) GroupID() string               { return c.orderPaidConsumerConfig.GroupID() }
+func (c *cfg) AssembledTopic() string        { return c.orderAssembledProducerConfig.AssembledTopic() }
+func (c *cfg) LogLevel() string              { return c.loggerConfig.LogLevel() }
+func (c *cfg) LogAsJSON() bool               { return c.loggerConfig.LogAsJSON() }
+func (c *cfg) ServiceName() string           { return c.loggerConfig.ServiceName() }
+func (c *cfg) Outputs() []string             { return c.loggerConfig.Outputs() }
+func (c *cfg) OtelCollectorEndpoint() string { return c.loggerConfig.OtelCollectorEndpoint() }
