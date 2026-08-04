@@ -19,7 +19,7 @@ func (r *userRepo) Create(ctx context.Context, u *model.User) (string, error) {
 		RETURNING uuid`
 
 	var userUUID string
-	err = r.db.QueryRowContext(ctx, query, u.Login, u.PasswordHash, u.Email, methodsJSON).Scan(&userUUID)
+	err = r.db.QueryRow(ctx, query, u.Login, u.PasswordHash, u.Email, methodsJSON).Scan(&userUUID)
 	if err != nil {
 		return "", err
 	}

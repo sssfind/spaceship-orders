@@ -2,13 +2,8 @@ package app
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
-	// Драйверы и внешние либы
-	redigo "github.com/gomodule/redigo/redis"
-	_ "github.com/lib/pq" // Обязательно для работы database/sql с Postgres
-	"go.uber.org/zap"
 	authApi "iam/internal/api/auth/v1"
 	userApi "iam/internal/api/user/v1"
 	"iam/internal/config"
@@ -19,6 +14,10 @@ import (
 	authService "iam/internal/service/auth"
 	userService "iam/internal/service/user"
 	platformRedis "platform/pkg/cache/redis"
+
+	redigo "github.com/gomodule/redigo/redis"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 type redisLoggerWrapper struct {
@@ -38,19 +37,16 @@ type Container struct {
 	config config.Config
 
 	// Инфраструктурные зависимости
-	db          *sql.DB
+	db          *pgxpool.Pool
 	redisPool   *redigo.Pool
-	redisClient sessionRepo.RedisClient // Использован локальный интерфейс репозитория вместо приватного типа платформы
+	redisClient sessionRepo.RedisClient
 
-	// Репозитории
 	userRepository    repository.UserRepository
 	sessionRepository repository.SessionRepository
 
-	// Сервисы
 	userServ service.UserService
 	authServ service.AuthService
 
-	// API Хендлеры
 	authImpl *authApi.Implementation
 	userImpl *userApi.Implementation
 }
@@ -63,19 +59,23 @@ func NewContainer(cfg *config.Config) *Container {
 }
 
 // DB инициализирует пул подключений к PostgreSQL
-func (c *Container) DB(ctx context.Context) (*sql.DB, error) {
+func (c *Container) DB(ctx context.Context) (*pgxpool.Pool, error) {
 	if c.db == nil {
-		db, err := sql.Open("postgres", c.config.Postgres().DSN())
+		poolConfig, err := pgxpool.ParseConfig(c.config.Postgres().DSN())
 		if err != nil {
-			return nil, fmt.Errorf("failed to open postgres: %w", err)
+			return nil, fmt.Errorf("failed to parse postgres dsn: %w", err)
 		}
 
-		// Проверяем жива ли база
-		if err := db.PingContext(ctx); err != nil {
+		pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to postgres via pgx: %w", err)
+		}
+
+		if err := pool.Ping(ctx); err != nil {
 			return nil, fmt.Errorf("failed to ping postgres: %w", err)
 		}
 
-		c.db = db
+		c.db = pool
 	}
 	return c.db, nil
 }
@@ -182,9 +182,7 @@ func (c *Container) UserImpl(ctx context.Context) (*userApi.Implementation, erro
 // Close корректно закрывает все инфраструктурные коннекты при выходе
 func (c *Container) Close() error {
 	if c.db != nil {
-		if err := c.db.Close(); err != nil {
-			return fmt.Errorf("error closing postgres pool: %w", err)
-		}
+		c.db.Close() // pgxpool.Pool.Close() не возвращает ошибку
 	}
 	if c.redisPool != nil {
 		if err := c.redisPool.Close(); err != nil {
