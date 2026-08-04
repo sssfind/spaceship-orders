@@ -40,7 +40,7 @@ graph TD
 
     %% Databases
     OrderService -->|pgx/v5| PostgresOrder[(PostgreSQL Orders)]
-    IAMService -->|lib/pq| PostgresIAM[(PostgreSQL IAM)]
+    IAMService -->|pgx/v5| PostgresIAM[(PostgreSQL IAM)]
     IAMService -->|redigo| RedisIAM[(Redis Sessions)]
     InventoryService -->|mongo-driver| MongoInventory[(MongoDB Inventory)]
     
