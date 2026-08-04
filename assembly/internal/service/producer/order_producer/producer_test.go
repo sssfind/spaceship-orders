@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
-
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/proto"
+	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
 )
 
 func (s *ProducerTestSuite) TestPublishShipAssembled_Success() {

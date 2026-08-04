@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+
 	"iam/internal/repository"
 )
 

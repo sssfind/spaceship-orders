@@ -4,19 +4,23 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"platform/pkg/logger"
-	platformMigrator "platform/pkg/migrator/pg"
-
-	"iam/internal/config"
-	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
-	userv1 "spaceship-orders/shared/pkg/proto/user/v1"
+	"syscall"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"iam/internal/config"
+	"platform/pkg/closer"
+	"platform/pkg/logger"
+	platformMigrator "platform/pkg/migrator/pg"
+	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
+	userv1 "spaceship-orders/shared/pkg/proto/user/v1"
 )
 
 type App struct {
-	config     *config.Config
+	cfg        *config.Config
 	container  *Container
 	grpcServer *grpc.Server
 }
@@ -24,87 +28,96 @@ type App struct {
 func NewApp(ctx context.Context) (*App, error) {
 	a := &App{}
 
-	if err := a.initDeps(ctx); err != nil {
-		return nil, fmt.Errorf("failed to init dependencies: %w", err)
-	}
-
-	return a, nil
-}
-
-func (a *App) Run() error {
-	lis, err := net.Listen("tcp", a.config.GRPC().Address())
-	if err != nil {
-		return fmt.Errorf("failed to listen on %s: %w", a.config.GRPC().Address(), err)
-	}
-
-	fmt.Printf("gRPC server is running on %s\n", a.config.GRPC().Address())
-
-	if err := a.grpcServer.Serve(lis); err != nil {
-		return fmt.Errorf("failed to serve gRPC: %w", err)
-	}
-
-	return nil
-}
-
-func (a *App) Stop() error {
-	fmt.Println("Stopping gRPC server gracefully...")
-	a.grpcServer.GracefulStop()
-
-	if err := a.container.Close(); err != nil {
-		return fmt.Errorf("failed to close container: %w", err)
-	}
-
-	return nil
-}
-
-func (a *App) initDeps(ctx context.Context) error {
 	cfg, err := config.Load()
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
+	a.cfg = cfg
 
-	a.config = cfg
-
-	err = logger.Init(cfg.Logger().Level(), cfg.Logger().AsJSON())
+	err = logger.InitWithConfig(logger.Config{
+		Level:                 cfg.Logger().Level(),
+		AsJSON:                cfg.Logger().AsJSON(),
+		ServiceName:           cfg.Logger().ServiceName(),
+		Outputs:               cfg.Logger().Outputs(),
+		OtelCollectorEndpoint: cfg.Logger().OtelCollectorEndpoint(),
+	})
 	if err != nil {
-		return fmt.Errorf("failed to init logger: %w", err)
+		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
+
+	closer.AddNamed("logger", func(c context.Context) error {
+		return logger.Shutdown(c)
+	})
 
 	dbMigrator := platformMigrator.NewMigrator(
 		cfg.Postgres().DSN(),
 		cfg.Postgres().MigrationDir(),
 	)
-
 	if err := dbMigrator.Up(); err != nil {
-		return fmt.Errorf("database migration failed: %w", err)
+		return nil, fmt.Errorf("database migration failed: %w", err)
 	}
 	logger.Info(ctx, "Database migrations successfully applied")
 
 	a.container = NewContainer(cfg)
+	closer.AddNamed("container", func(_ context.Context) error {
+		return a.container.Close()
+	})
 
-	if err := a.initGRPCServer(ctx); err != nil {
-		return err
+	err = a.initGrpcServer(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init grpc server: %w", err)
 	}
 
-	return nil
+	return a, nil
 }
-func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer()
+
+func (a *App) initGrpcServer(ctx context.Context) error {
+	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 
 	reflection.Register(a.grpcServer)
 
+	// Настройка gRPC Health Check для двух сервисов IAM
+	healthCheckServer := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(a.grpcServer, healthCheckServer)
+	healthCheckServer.SetServingStatus("auth.v1.AuthService", grpc_health_v1.HealthCheckResponse_SERVING)
+	healthCheckServer.SetServingStatus("user.v1.UserService", grpc_health_v1.HealthCheckResponse_SERVING)
+
 	authImpl, err := a.container.AuthImpl(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to init auth impl: %w", err)
 	}
 
 	userImpl, err := a.container.UserImpl(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to init user impl: %w", err)
 	}
 
 	authv1.RegisterAuthServiceServer(a.grpcServer, authImpl)
 	userv1.RegisterUserServiceServer(a.grpcServer, userImpl)
+
+	closer.AddNamed("grpc_server", func(_ context.Context) error {
+		a.grpcServer.GracefulStop()
+		return nil
+	})
+
+	return nil
+}
+
+func (a *App) Run() error {
+	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
+	closer.SetLogger(logger.Logger())
+
+	address := a.cfg.GRPC().Address()
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		return fmt.Errorf("failed to listen on %s: %w", address, err)
+	}
+
+	logger.Info(context.Background(), fmt.Sprintf("IAM gRPC Server успешно запущен на %s", address))
+
+	if err := a.grpcServer.Serve(lis); err != nil && err != grpc.ErrServerStopped {
+		return fmt.Errorf("grpc server failure: %w", err)
+	}
 
 	return nil
 }

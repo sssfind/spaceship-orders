@@ -2,9 +2,9 @@ package kafka
 
 import (
 	"context"
-	"platform/pkg/kafka/consumer"
 
 	"go.uber.org/zap"
+	"platform/pkg/kafka/consumer"
 )
 
 type Logger interface {

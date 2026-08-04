@@ -1,12 +1,11 @@
 package order_consumer
 
 import (
-	"platform/pkg/logger"
 	"testing"
 
 	"assembly/internal/service/producer/order_producer/mocks"
-
 	"github.com/stretchr/testify/suite"
+	"platform/pkg/logger"
 )
 
 type HandlerTestSuite struct {
@@ -21,7 +20,6 @@ func (s *HandlerTestSuite) SetupTest() {
 }
 
 func (s *HandlerTestSuite) SetupSuite() {
-
 	_ = logger.Init("debug", false)
 }
 

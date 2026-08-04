@@ -2,8 +2,9 @@ package session
 
 import (
 	"context"
-	"iam/internal/repository"
 	"time"
+
+	"iam/internal/repository"
 )
 
 type RedisClient interface {

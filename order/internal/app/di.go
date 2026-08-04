@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/IBM/sarama"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	apiV1 "order/internal/api/order/v1"
 	clientInventory "order/internal/client/grpc/inventory/v1"
 	clientPayment "order/internal/client/grpc/payment/v1"
@@ -18,14 +22,10 @@ import (
 	platformConsumer "platform/pkg/kafka/consumer"
 	platformProducer "platform/pkg/kafka/producer"
 	"platform/pkg/logger"
+	"platform/pkg/tracing"
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 	pbPayment "spaceship-orders/shared/pkg/proto/payment/v1"
-
-	"github.com/IBM/sarama"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type serviceProvider struct {
@@ -86,7 +86,10 @@ func (sp *serviceProvider) InventoryGrpcClient(ctx context.Context) (orderImpl.I
 
 func (sp *serviceProvider) PaymentGrpcClient(ctx context.Context) (orderImpl.PaymentClient, error) {
 	if sp.paymentClient == nil {
-		conn, err := grpc.NewClient(sp.cfg.PaymentGrpcConfig.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.NewClient(sp.cfg.PaymentGrpcConfig.Address(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithUnaryInterceptor(tracing.UnaryClientInterceptor("order-service")),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("payment connection error: %w", err)
 		}

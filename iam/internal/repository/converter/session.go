@@ -1,9 +1,10 @@
 package converter
 
 import (
+	"time"
+
 	"iam/internal/model"
 	repoModel "iam/internal/repository/model"
-	"time"
 )
 
 func ToRepoFromSession(m *model.Session) *repoModel.SessionRepoModel {

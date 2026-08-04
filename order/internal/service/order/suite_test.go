@@ -4,13 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
 	clientMocks "order/internal/client/grpc/mocks"
 	producerMocks "order/internal/producer/order_producer/mocks"
 	repoMocks "order/internal/repository/mocks"
 	"order/internal/service"
 	orderService "order/internal/service/order"
-
-	"github.com/stretchr/testify/suite"
 )
 
 type OrderServiceTestSuite struct {

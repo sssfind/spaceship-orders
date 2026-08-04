@@ -7,16 +7,17 @@ import (
 	"net/http"
 	"syscall"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	healthAPI "order/internal/api/health"
 	"order/internal/config"
 	customMiddleware "order/internal/middleware"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	platformMigrator "platform/pkg/migrator/pg"
+	"platform/pkg/tracing"
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 type App struct {
@@ -33,15 +34,33 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Инициализируем глобальный структурированный логгер платформы
-	err = logger.Init(cfg.LogLevel(), cfg.LogAsJSON())
+	// Инициализируем платформенный логгер с поддержкой мульти-кора
+	err = logger.InitWithConfig(logger.Config{
+		Level:                 cfg.LogLevel(),
+		AsJSON:                cfg.LogAsJSON(),
+		ServiceName:           cfg.ServiceName(),
+		Outputs:               cfg.Outputs(),
+		OtelCollectorEndpoint: cfg.OtelCollectorEndpoint(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
 
+	closer.AddNamed("logger", func(c context.Context) error {
+		return logger.Shutdown(c)
+	})
+
+	err = tracing.InitTracer(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init tracer: %w", err)
+	}
+
+	closer.AddNamed("tracer", func(c context.Context) error {
+		return tracing.ShutdownTracer(c)
+	})
+
 	a.serviceProvider = newServiceProvider(cfg)
 
-	// Инициализируем базовую инфраструктуру и сервер
 	err = a.initDependencies(ctx)
 	if err != nil {
 		return nil, err
@@ -51,7 +70,6 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 func (a *App) initDependencies(ctx context.Context) error {
-	// Накатываем миграции БД через платформенную библиотеку
 	dbMigrator := platformMigrator.NewMigrator(
 		a.serviceProvider.cfg.Dsn(),
 		a.serviceProvider.cfg.MigrationDir(),
@@ -80,6 +98,7 @@ func (a *App) initDependencies(ctx context.Context) error {
 	r.Use(customMiddleware.RequestLogger)
 
 	r.Get("/health", healthHandler.HealthCheck)
+	r.Handle("/metrics", promhttp.Handler())
 
 	r.Mount("/", orderServer)
 

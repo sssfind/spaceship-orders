@@ -4,11 +4,10 @@ import (
 	"errors"
 	"time"
 
-	"iam/internal/model"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
+	"iam/internal/model"
 )
 
 type MockSessionConfig struct {

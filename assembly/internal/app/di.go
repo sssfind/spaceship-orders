@@ -1,10 +1,13 @@
 package app
 
 import (
+	"context"
+
 	"assembly/internal/config"
 	"assembly/internal/service/consumer/order_consumer"
 	"assembly/internal/service/producer/order_producer"
 	"github.com/IBM/sarama"
+	"platform/pkg/closer"
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/kafka/producer"
 	"platform/pkg/logger"
@@ -37,6 +40,10 @@ func (sp *serviceProvider) SaramaProducer() (sarama.SyncProducer, error) {
 			return nil, err
 		}
 		sp.saramaProducer = prod
+
+		closer.AddNamed("assembly_sarama_producer", func(_ context.Context) error {
+			return sp.saramaProducer.Close()
+		})
 	}
 	return sp.saramaProducer, nil
 }
@@ -51,6 +58,10 @@ func (sp *serviceProvider) SaramaConsumerGroup() (sarama.ConsumerGroup, error) {
 			return nil, err
 		}
 		sp.saramaConsumer = group
+
+		closer.AddNamed("assembly_sarama_consumer_group", func(_ context.Context) error {
+			return sp.saramaConsumer.Close()
+		})
 	}
 	return sp.saramaConsumer, nil
 }

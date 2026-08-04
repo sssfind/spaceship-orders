@@ -7,13 +7,13 @@ import (
 	"syscall"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/reflection" // Импортируем пакет рефлексии
+	"google.golang.org/grpc/reflection"
 	"payment/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
+	"platform/pkg/tracing"
 	pb "spaceship-orders/shared/pkg/proto/payment/v1"
 )
 
@@ -30,10 +30,31 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	err = logger.Init(cfg.LogLevel(), cfg.LogAsJSON())
+	err = logger.InitWithConfig(logger.Config{
+		Level:                 cfg.LogLevel(),
+		AsJSON:                cfg.LogAsJSON(),
+		ServiceName:           cfg.ServiceName(),
+		Outputs:               cfg.Outputs(),
+		OtelCollectorEndpoint: cfg.OtelCollectorEndpoint(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
+
+	closer.AddNamed("logger", func(c context.Context) error {
+		return logger.Shutdown(c)
+	})
+
+	logger.Info(ctx, fmt.Sprintf("Tracer endpoint: %s", cfg.CollectorEndpoint()))
+
+	err = tracing.InitTracer(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init tracer: %w", err)
+	}
+
+	closer.AddNamed("tracer", func(c context.Context) error {
+		return tracing.ShutdownTracer(c)
+	})
 
 	a.serviceProvider = newServiceProvider(cfg)
 
@@ -46,7 +67,7 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 func (a *App) initGrpcServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.grpcServer = grpc.NewServer(grpc.UnaryInterceptor(tracing.UnaryServerInterceptor("payment-service")))
 
 	healthServer := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(a.grpcServer, healthServer)
@@ -71,6 +92,8 @@ func (a *App) initGrpcServer(ctx context.Context) error {
 
 func (a *App) Run() error {
 	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
+
+	closer.SetLogger(logger.Logger())
 
 	lis, err := net.Listen("tcp", a.serviceProvider.cfg.Address())
 	if err != nil {

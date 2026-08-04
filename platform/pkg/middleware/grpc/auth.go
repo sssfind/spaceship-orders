@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-
 	authV1 "spaceship-orders/shared/pkg/proto/auth/v1"
 	commonV1 "spaceship-orders/shared/pkg/proto/common/v1"
 )

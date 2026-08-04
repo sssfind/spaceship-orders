@@ -2,87 +2,100 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"os"
-	"os/signal"
+	"net/http"
 	"syscall"
-	"time"
 
 	"assembly/internal/config"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 )
 
 type App struct {
 	serviceProvider *serviceProvider
+	httpServer      *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
+	a := &App{}
+
 	cfg, err := config.NewConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init config: %w", err)
 	}
 
-	err = logger.Init(cfg.LogLevel(), true)
+	err = logger.InitWithConfig(logger.Config{
+		Level:                 cfg.LogLevel(),
+		AsJSON:                cfg.LogAsJSON(),
+		ServiceName:           cfg.ServiceName(),
+		Outputs:               cfg.Outputs(),
+		OtelCollectorEndpoint: cfg.OtelCollectorEndpoint(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize global logger: %w", err)
 	}
 
-	return &App{
-		serviceProvider: newServiceProvider(cfg),
-	}, nil
+	closer.AddNamed("logger", func(c context.Context) error {
+		return logger.Shutdown(c)
+	})
+
+	a.serviceProvider = newServiceProvider(cfg)
+
+	err = a.initDependencies(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (a *App) initDependencies(ctx context.Context) error {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	// Эндпоинт для Prometheus
+	r.Handle("/metrics", promhttp.Handler())
+
+	a.httpServer = &http.Server{
+		Addr:    a.serviceProvider.cfg.Address(), // Берем HTTP-адрес из конфига (например, :8081)
+		Handler: r,
+	}
+
+	closer.AddNamed("http_server", func(c context.Context) error {
+		return a.httpServer.Shutdown(c)
+	})
+
+	return nil
 }
 
 func (a *App) Run(ctx context.Context) error {
+	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
 	closer.SetLogger(logger.Logger())
-
-	closer.AddNamed("Logger Sync", func(_ context.Context) error {
-		return logger.Sync()
-	})
-
-	closer.AddNamed("Sarama Producer", func(_ context.Context) error {
-		if a.serviceProvider.saramaProducer != nil {
-			return a.serviceProvider.saramaProducer.Close()
-		}
-		return nil
-	})
-
-	closer.AddNamed("Sarama Consumer Group", func(_ context.Context) error {
-		if a.serviceProvider.saramaConsumer != nil {
-			return a.serviceProvider.saramaConsumer.Close()
-		}
-		return nil
-	})
 
 	cons, err := a.serviceProvider.OrderConsumer()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to init order consumer: %w", err)
 	}
-	cfg := a.serviceProvider.cfg
-	fmt.Fprintf(os.Stderr, "!!! DEBUG: Brokers=%v, GroupID=%s, Topic=%s\n", cfg.Brokers(), cfg.GroupID(), cfg.PaidTopic())
 
+	// 1. Запускаем Kafka Consumer в фоновой горутине
 	go func() {
-		logger.Info(ctx, "Assembly Service Kafka Consumer is starting...")
+		logger.Info(ctx, fmt.Sprintf("Assembly Service Kafka Consumer успешно запущен на брокерах %v", a.serviceProvider.cfg.Brokers()))
 		if err := cons.Run(ctx); err != nil {
-			fmt.Fprintf(os.Stderr, "!!! CRITICAL CONSUMER ERROR: %v\n", err)
 			logger.Error(ctx, fmt.Sprintf("Assembly Consumer stopped with error: %v", err))
 		}
 	}()
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	// 2. HTTP Server запускаем на основном потоке
+	logger.Info(ctx, fmt.Sprintf("Assembly HTTP Server успешно запущен на %s", a.httpServer.Addr))
 
-	sig := <-sigChan
-	logger.Info(ctx, fmt.Sprintf("Получен системный сигнал %v. Начинаем graceful shutdown...", sig))
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer shutdownCancel()
-
-	if err := closer.CloseAll(shutdownCtx); err != nil {
-		logger.Error(ctx, fmt.Sprintf("Ошибка при закрытии ресурсов приложения: %v", err))
-		return err
+	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("http server runtime error: %w", err)
 	}
 
-	logger.Info(ctx, "Assembly Service успешно остановлен.")
 	return nil
 }

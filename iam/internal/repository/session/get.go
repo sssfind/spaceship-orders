@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	redigo "github.com/gomodule/redigo/redis"
 	"iam/internal/model"
 	"iam/internal/repository/converter"
 	repoModel "iam/internal/repository/model"
-
-	redigo "github.com/gomodule/redigo/redis"
 )
 
 func (r *sessionRepo) Get(ctx context.Context, sessionUUID string) (*model.Session, error) {

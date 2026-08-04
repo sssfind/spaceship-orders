@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"inventory/internal/model"
-	"inventory/internal/repository/part"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"inventory/internal/model"
+	"inventory/internal/repository/part"
 )
 
 func setupTestCollection(t *testing.T) *mongo.Collection {

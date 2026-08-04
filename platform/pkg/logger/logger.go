@@ -6,6 +6,11 @@ import (
 	"strings"
 	"sync"
 
+	"go.opentelemetry.io/contrib/bridges/otelzap"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -17,11 +22,21 @@ const (
 	userIDKey  Key = "user_id"
 )
 
+// Config Содержит параметры инициализации логгера
+type Config struct {
+	Level                 string
+	AsJSON                bool
+	ServiceName           string
+	Outputs               []string // например ["stdout", "otlp"]
+	OtelCollectorEndpoint string   // например "otel-collector:4317"
+}
+
 // Глобальный singleton логгер
 var (
-	globalLogger *logger
-	initOnce     sync.Once
-	dynamicLevel zap.AtomicLevel
+	globalLogger   *logger
+	initOnce       sync.Once
+	dynamicLevel   zap.AtomicLevel
+	loggerProvider *sdklog.LoggerProvider
 )
 
 // logger обёртка над zap.Logger с enrich поддержкой контекста
@@ -29,33 +44,102 @@ type logger struct {
 	zapLogger *zap.Logger
 }
 
-// Init инициализирует глобальный логгер.
+// Init сохраняет обратную совместимость для базовой инициализации
 func Init(levelStr string, asJSON bool) error {
+	return InitWithConfig(Config{
+		Level:   levelStr,
+		AsJSON:  asJSON,
+		Outputs: []string{"stdout"},
+	})
+}
+
+// InitWithConfig инициализирует логгер с поддержкой нескольких выходов (stdout + OTLP)
+func InitWithConfig(cfg Config) error {
+	var initErr error
 	initOnce.Do(func() {
-		dynamicLevel = zap.NewAtomicLevelAt(parseLevel(levelStr))
+		dynamicLevel = zap.NewAtomicLevelAt(parseLevel(cfg.Level))
 
-		encoderCfg := buildProductionEncoderConfig()
+		var cores []zapcore.Core
 
-		var encoder zapcore.Encoder
-		if asJSON {
-			encoder = zapcore.NewJSONEncoder(encoderCfg)
-		} else {
-			encoder = zapcore.NewConsoleEncoder(encoderCfg)
+		outputsMap := make(map[string]bool)
+		for _, out := range cfg.Outputs {
+			outputsMap[strings.ToLower(strings.TrimSpace(out))] = true
+		}
+		if len(outputsMap) == 0 {
+			outputsMap["stdout"] = true
 		}
 
-		core := zapcore.NewCore(
-			encoder,
-			zapcore.AddSync(os.Stdout),
-			dynamicLevel,
-		)
+		// Core 1: JSON / Console -> stdout
+		if outputsMap["stdout"] {
+			encoderCfg := buildProductionEncoderConfig()
+			var encoder zapcore.Encoder
+			if cfg.AsJSON {
+				encoder = zapcore.NewJSONEncoder(encoderCfg)
+			} else {
+				encoder = zapcore.NewConsoleEncoder(encoderCfg)
+			}
 
-		zapLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(2))
+			stdoutCore := zapcore.NewCore(
+				encoder,
+				zapcore.AddSync(os.Stdout),
+				dynamicLevel,
+			)
+			cores = append(cores, stdoutCore)
+		}
+
+		// Core 2: OTLP Log Exporter -> OTEL Collector (OTLP/gRPC)
+		if outputsMap["otlp"] && cfg.OtelCollectorEndpoint != "" {
+			ctx := context.Background()
+
+			res, err := resource.New(ctx,
+				resource.WithAttributes(
+					semconv.ServiceNameKey.String(cfg.ServiceName),
+				),
+			)
+			if err != nil {
+				initErr = err
+				return
+			}
+
+			exporter, err := otlploggrpc.New(ctx,
+				otlploggrpc.WithEndpoint(cfg.OtelCollectorEndpoint),
+				otlploggrpc.WithInsecure(),
+			)
+			if err != nil {
+				initErr = err
+				return
+			}
+
+			loggerProvider = sdklog.NewLoggerProvider(
+				sdklog.WithResource(res),
+				sdklog.WithProcessor(sdklog.NewBatchProcessor(exporter)),
+			)
+
+			otlpCore := otelzap.NewCore(
+				cfg.ServiceName,
+				otelzap.WithLoggerProvider(loggerProvider),
+			)
+			cores = append(cores, otlpCore)
+		}
+
+		combinedCore := zapcore.NewTee(cores...)
+		zapLogger := zap.New(combinedCore, zap.AddCaller(), zap.AddCallerSkip(2))
 
 		globalLogger = &logger{
 			zapLogger: zapLogger,
 		}
 	})
 
+	return initErr
+}
+
+func Shutdown(ctx context.Context) error {
+	if globalLogger != nil && globalLogger.zapLogger != nil {
+		_ = globalLogger.zapLogger.Sync()
+	}
+	if loggerProvider != nil {
+		return loggerProvider.Shutdown(ctx)
+	}
 	return nil
 }
 
@@ -138,52 +222,78 @@ func WithContext(ctx context.Context) *logger {
 
 // Debug enrich-aware debug log
 func Debug(ctx context.Context, msg string, fields ...zap.Field) {
+	if globalLogger == nil {
+		return
+	}
 	globalLogger.Debug(ctx, msg, fields...)
 }
 
-// Info enrich-aware info log
 func Info(ctx context.Context, msg string, fields ...zap.Field) {
+	if globalLogger == nil {
+		return
+	}
 	globalLogger.Info(ctx, msg, fields...)
 }
 
-// Warn enrich-aware warn log
 func Warn(ctx context.Context, msg string, fields ...zap.Field) {
+	if globalLogger == nil {
+		return
+	}
 	globalLogger.Warn(ctx, msg, fields...)
 }
 
-// Error enrich-aware error log
 func Error(ctx context.Context, msg string, fields ...zap.Field) {
+	if globalLogger == nil {
+		return
+	}
 	globalLogger.Error(ctx, msg, fields...)
 }
 
-// Fatal enrich-aware fatal log
 func Fatal(ctx context.Context, msg string, fields ...zap.Field) {
+	if globalLogger == nil {
+		return
+	}
 	globalLogger.Fatal(ctx, msg, fields...)
 }
 
 // Instance methods для enrich loggers
 
 func (l *logger) Debug(ctx context.Context, msg string, fields ...zap.Field) {
+	if l == nil || l.zapLogger == nil {
+		return
+	}
 	allFields := append(fieldsFromContext(ctx), fields...)
 	l.zapLogger.Debug(msg, allFields...)
 }
 
 func (l *logger) Info(ctx context.Context, msg string, fields ...zap.Field) {
+	if l == nil || l.zapLogger == nil {
+		return
+	}
 	allFields := append(fieldsFromContext(ctx), fields...)
 	l.zapLogger.Info(msg, allFields...)
 }
 
 func (l *logger) Warn(ctx context.Context, msg string, fields ...zap.Field) {
+	if l == nil || l.zapLogger == nil {
+		return
+	}
 	allFields := append(fieldsFromContext(ctx), fields...)
 	l.zapLogger.Warn(msg, allFields...)
 }
 
 func (l *logger) Error(ctx context.Context, msg string, fields ...zap.Field) {
+	if l == nil || l.zapLogger == nil {
+		return
+	}
 	allFields := append(fieldsFromContext(ctx), fields...)
 	l.zapLogger.Error(msg, allFields...)
 }
 
 func (l *logger) Fatal(ctx context.Context, msg string, fields ...zap.Field) {
+	if l == nil || l.zapLogger == nil {
+		return
+	}
 	allFields := append(fieldsFromContext(ctx), fields...)
 	l.zapLogger.Fatal(msg, allFields...)
 }

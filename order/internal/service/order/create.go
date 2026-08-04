@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"order/internal/metrics"
 	"order/internal/model"
 )
 
@@ -35,6 +36,9 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 	if err != nil {
 		return nil, err
 	}
+
+	metrics.OrdersTotal.Inc()
+	metrics.OrdersRevenueTotal.Add(totalPrice)
 
 	return newOrder, nil
 }

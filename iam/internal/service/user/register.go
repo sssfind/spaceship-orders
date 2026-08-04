@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"iam/internal/model"
 
 	"golang.org/x/crypto/bcrypt"
+	"iam/internal/model"
 )
 
 func (s *userService) Register(ctx context.Context, u *model.User, rawPassword string) (string, error) {

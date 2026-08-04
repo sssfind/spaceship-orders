@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	LoggerConfig
+	TracerConfig
 	InventoryGrpcConfig
 	PaymentGrpcConfig
 	OrderHttpConfig
@@ -24,6 +25,11 @@ func Load() (*Config, error) {
 	loggerCfg, err := env.NewLoggerConfig()
 	if err != nil {
 		return nil, fmt.Errorf("logger config error: %w", err)
+	}
+
+	tracerCfg, err := env.NewTracerConfig()
+	if err != nil {
+		return nil, fmt.Errorf("tracer config error: %w", err)
 	}
 
 	inventoryCfg, err := env.NewInventoryGrpcConfig()
@@ -63,6 +69,7 @@ func Load() (*Config, error) {
 
 	return &Config{
 		LoggerConfig:                 loggerCfg,
+		TracerConfig:                 tracerCfg,
 		InventoryGrpcConfig:          inventoryCfg,
 		PaymentGrpcConfig:            paymentCfg,
 		OrderHttpConfig:              httpCfg,
@@ -71,4 +78,8 @@ func Load() (*Config, error) {
 		OrderPaidProducerConfig:      paidProducerCfg,
 		OrderAssembledConsumerConfig: assembledConsumerCfg,
 	}, nil
+}
+
+func (c *Config) ServiceName() string {
+	return c.LoggerConfig.ServiceName()
 }

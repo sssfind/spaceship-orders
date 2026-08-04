@@ -2,11 +2,13 @@ package payment_test
 
 import (
 	"context"
+	"platform/pkg/logger"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
 	"payment/internal/service"
 	paymentService "payment/internal/service/payment"
+
+	"github.com/stretchr/testify/suite"
 )
 
 type PaymentServiceTestSuite struct {
@@ -16,6 +18,8 @@ type PaymentServiceTestSuite struct {
 }
 
 func (s *PaymentServiceTestSuite) SetupTest() {
+	logger.SetNopLogger()
+
 	s.ctx = context.Background()
 	s.service = paymentService.NewService()
 }

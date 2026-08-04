@@ -3,11 +3,15 @@ package env
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type loggerConfig struct {
-	level  string
-	asJSON bool
+	logLevel              string
+	logAsJSON             bool
+	serviceName           string
+	outputs               []string
+	otelCollectorEndpoint string
 }
 
 func NewLoggerConfig() (*loggerConfig, error) {
@@ -17,18 +21,47 @@ func NewLoggerConfig() (*loggerConfig, error) {
 	}
 
 	asJSONStr := os.Getenv("LOGGER_AS_JSON")
-	asJSON, err := strconv.ParseBool(asJSONStr)
-	if err != nil {
-		asJSON = false
+	asJSON, _ := strconv.ParseBool(asJSONStr)
+
+	serviceName := os.Getenv("SERVICE_NAME")
+	if serviceName == "" {
+		serviceName = "IAM-service"
 	}
 
-	return &loggerConfig{level: level, asJSON: asJSON}, nil
+	outputsStr := os.Getenv("LOG_OUTPUTS")
+	var outputs []string
+	if outputsStr != "" {
+		for _, out := range strings.Split(outputsStr, ",") {
+			if trimmed := strings.TrimSpace(out); trimmed != "" {
+				outputs = append(outputs, trimmed)
+			}
+		}
+	}
+	if len(outputs) == 0 {
+		outputs = []string{"stdout"}
+	}
+
+	otelEndpoint := os.Getenv("OTEL_COLLECTOR_ENDPOINT")
+	if otelEndpoint == "" {
+		otelEndpoint = "otel-collector:4317"
+	}
+
+	return &loggerConfig{
+		logLevel:              level,
+		logAsJSON:             asJSON,
+		serviceName:           serviceName,
+		outputs:               outputs,
+		otelCollectorEndpoint: otelEndpoint,
+	}, nil
 }
 
 func (l *loggerConfig) Level() string {
-	return l.level
+	return l.logLevel
 }
 
 func (l *loggerConfig) AsJSON() bool {
-	return l.asJSON
+	return l.logAsJSON
 }
+func (cfg *loggerConfig) ServiceName() string           { return cfg.serviceName }
+func (cfg *loggerConfig) Outputs() []string             { return cfg.outputs }
+func (cfg *loggerConfig) OtelCollectorEndpoint() string { return cfg.otelCollectorEndpoint }

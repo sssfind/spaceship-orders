@@ -1,9 +1,8 @@
 package config
 
 import (
-	"iam/internal/config/env"
-
 	"github.com/joho/godotenv"
+	"iam/internal/config/env"
 )
 
 type Config struct {

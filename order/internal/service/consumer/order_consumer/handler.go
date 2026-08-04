@@ -3,12 +3,12 @@ package order_consumer
 import (
 	"context"
 	"fmt"
-	"order/internal/service"
-	"platform/pkg/kafka/consumer"
-	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
+	"order/internal/service"
+	"platform/pkg/kafka/consumer"
+	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
 )
 
 type OrderAssembledHandler struct {

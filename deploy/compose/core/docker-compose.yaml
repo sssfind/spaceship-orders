@@ -14,9 +14,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:${KAFKA_INTERNAL_PORT},PLAINTEXT_EXTERNAL://localhost:${KAFKA_EXTERNAL_PORT},CONTROLLER://kafka:${KAFKA_CONTROLLER_PORT}
-
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_LOG_RETENTION_HOURS: 168
@@ -56,7 +54,88 @@ services:
     networks:
       - spaceship_network
 
-  # === Сервис Оплаты (Заглушка) ===
+  # === OpenTelemetry Collector ===
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ../../otel/collector.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP HTTP receiver
+    networks:
+      - spaceship_network
+    restart: unless-stopped
+
+  # === Elasticsearch ===
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - spaceship_network
+    restart: unless-stopped
+
+  # === Kibana ===
+  kibana:
+    image: elastic/kibana:8.17.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - spaceship_network
+    restart: unless-stopped
+
+  # === Jaeger ===
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    container_name: jaeger
+    ports:
+      - "16686:16686" # UI
+      - "14250:14250"
+    networks:
+      - spaceship_network
+    restart: unless-stopped
+
+  # === Prometheus ===
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - spaceship_network
+    restart: unless-stopped
+
+  # === Grafana ===
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ../../grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ../../grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - spaceship_network
+    restart: unless-stopped
+
+  # === Сервис Оплаты ===
   payment_app:
     image: payment:latest
     container_name: payment_service
@@ -69,6 +148,8 @@ services:
       - ../payment/.env
     environment:
       - GRPC_HOST=0.0.0.0
+      - OTEL_COLLECTOR_ENDPOINT=otel-collector:4317
+      - SERVICE_NAME=payment-service
     networks:
       - spaceship_network
     restart: unless-stopped
@@ -82,6 +163,8 @@ services:
       dockerfile: deploy/docker/assembly/Dockerfile
     env_file:
       - ../assembly/.env
+    ports:
+      - "${ASSEMBLY_HTTP_PORT:-8082}:${ASSEMBLY_HTTP_PORT:-8082}"
     environment:
       - KAFKA_BROKERS=kafka:${KAFKA_INTERNAL_PORT:-29092}
       - KAFKA_ORDER_PAID_TOPIC=order-paid
@@ -96,6 +179,7 @@ services:
 
 volumes:
   kafka_data:
+  es_data:
 
 networks:
   spaceship_network:

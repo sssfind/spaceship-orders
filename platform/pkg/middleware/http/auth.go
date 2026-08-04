@@ -6,7 +6,6 @@ import (
 
 	grpcAuth "platform/pkg/middleware/grpc"
 	authV1 "spaceship-orders/shared/pkg/proto/auth/v1"
-
 	commonV1 "spaceship-orders/shared/pkg/proto/common/v1"
 )
 
