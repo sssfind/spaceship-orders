@@ -22,6 +22,7 @@ import (
 	platformConsumer "platform/pkg/kafka/consumer"
 	platformProducer "platform/pkg/kafka/producer"
 	"platform/pkg/logger"
+	"platform/pkg/tracing"
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 	pbInventory "spaceship-orders/shared/pkg/proto/inventory/v1"
 	pbPayment "spaceship-orders/shared/pkg/proto/payment/v1"
@@ -85,7 +86,10 @@ func (sp *serviceProvider) InventoryGrpcClient(ctx context.Context) (orderImpl.I
 
 func (sp *serviceProvider) PaymentGrpcClient(ctx context.Context) (orderImpl.PaymentClient, error) {
 	if sp.paymentClient == nil {
-		conn, err := grpc.NewClient(sp.cfg.PaymentGrpcConfig.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.NewClient(sp.cfg.PaymentGrpcConfig.Address(),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithUnaryInterceptor(tracing.UnaryClientInterceptor("order-service")),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("payment connection error: %w", err)
 		}

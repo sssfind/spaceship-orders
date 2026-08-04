@@ -10,6 +10,13 @@ type LoggerConfig interface {
 	OtelCollectorEndpoint() string
 }
 
+type TracerConfig interface {
+	CollectorEndpoint() string
+	ServiceName() string
+	Environment() string
+	ServiceVersion() string
+}
+
 type OrderHttpConfig interface {
 	Address() string
 	ReadTimeout() time.Duration

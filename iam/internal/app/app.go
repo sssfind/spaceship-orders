@@ -6,18 +6,17 @@ import (
 	"net"
 	"syscall"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 	"iam/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	platformMigrator "platform/pkg/migrator/pg"
 	authv1 "spaceship-orders/shared/pkg/proto/auth/v1"
 	userv1 "spaceship-orders/shared/pkg/proto/user/v1"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/health"
-	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/reflection"
 )
 
 type App struct {

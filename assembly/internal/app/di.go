@@ -1,16 +1,16 @@
 package app
 
 import (
+	"context"
+
 	"assembly/internal/config"
 	"assembly/internal/service/consumer/order_consumer"
 	"assembly/internal/service/producer/order_producer"
-	"context"
+	"github.com/IBM/sarama"
 	"platform/pkg/closer"
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/kafka/producer"
 	"platform/pkg/logger"
-
-	"github.com/IBM/sarama"
 )
 
 type serviceProvider struct {

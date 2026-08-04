@@ -148,6 +148,8 @@ services:
       - ../payment/.env
     environment:
       - GRPC_HOST=0.0.0.0
+      - OTEL_COLLECTOR_ENDPOINT=otel-collector:4317
+      - SERVICE_NAME=payment-service
     networks:
       - spaceship_network
     restart: unless-stopped

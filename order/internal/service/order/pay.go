@@ -6,9 +6,13 @@ import (
 
 	"github.com/google/uuid"
 	"order/internal/model"
+	"platform/pkg/tracing"
 )
 
 func (s *srv) PayOrder(ctx context.Context, orderUUID uuid.UUID, method model.PaymentMethod) (uuid.UUID, error) {
+	ctx, span := tracing.StartSpan(ctx, "PayOrder")
+	defer span.End()
+
 	// Запрашиваем заказ из базы. Переводим UUID в строку для репозитория
 	order, err := s.orderRepo.Get(ctx, orderUUID.String())
 	if err != nil {

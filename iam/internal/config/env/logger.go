@@ -58,6 +58,7 @@ func NewLoggerConfig() (*loggerConfig, error) {
 func (l *loggerConfig) Level() string {
 	return l.logLevel
 }
+
 func (l *loggerConfig) AsJSON() bool {
 	return l.logAsJSON
 }

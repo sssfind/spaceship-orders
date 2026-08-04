@@ -8,12 +8,11 @@ import (
 	"syscall"
 
 	"assembly/internal/config"
-	"platform/pkg/closer"
-	"platform/pkg/logger"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"platform/pkg/closer"
+	"platform/pkg/logger"
 )
 
 type App struct {

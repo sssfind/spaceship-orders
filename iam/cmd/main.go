@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"iam/internal/app"
 	"log"
+
+	"iam/internal/app"
 )
 
 func main() {

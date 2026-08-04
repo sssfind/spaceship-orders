@@ -8,6 +8,13 @@ type LoggerConfig interface {
 	OtelCollectorEndpoint() string
 }
 
+type TracerConfig interface {
+	CollectorEndpoint() string
+	ServiceName() string
+	Environment() string
+	ServiceVersion() string
+}
+
 type PaymentGrpcConfig interface {
 	Address() string
 }

@@ -1,21 +1,20 @@
 package order_consumer
 
 import (
-	"assembly/internal/metrics"
 	"context"
 	"fmt"
 	"math/rand"
 	"os"
 	"time"
 
+	"assembly/internal/metrics"
 	// ИСПРАВЛЕНО: Импортируем продюсер из пакета assembly, а не order
 	"assembly/internal/service/producer/order_producer"
+	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/protobuf/proto"
 	"platform/pkg/kafka/consumer"
 	"platform/pkg/logger"
 	pbEvents "spaceship-orders/shared/pkg/proto/events/v1"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"google.golang.org/protobuf/proto"
 )
 
 type OrderPaidHandler struct {

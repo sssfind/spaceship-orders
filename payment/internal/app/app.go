@@ -6,16 +6,15 @@ import (
 	"net"
 	"syscall"
 
-	"payment/internal/config"
-	"platform/pkg/closer"
-	"platform/pkg/logger"
-	pb "spaceship-orders/shared/pkg/proto/payment/v1"
-
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"payment/internal/config"
+	"platform/pkg/closer"
+	"platform/pkg/logger"
+	"platform/pkg/tracing"
+	pb "spaceship-orders/shared/pkg/proto/payment/v1"
 )
 
 type App struct {
@@ -38,13 +37,23 @@ func NewApp(ctx context.Context) (*App, error) {
 		Outputs:               cfg.Outputs(),
 		OtelCollectorEndpoint: cfg.OtelCollectorEndpoint(),
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
 
 	closer.AddNamed("logger", func(c context.Context) error {
 		return logger.Shutdown(c)
+	})
+
+	logger.Info(ctx, fmt.Sprintf("Tracer endpoint: %s", cfg.CollectorEndpoint()))
+
+	err = tracing.InitTracer(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init tracer: %w", err)
+	}
+
+	closer.AddNamed("tracer", func(c context.Context) error {
+		return tracing.ShutdownTracer(c)
 	})
 
 	a.serviceProvider = newServiceProvider(cfg)
@@ -58,7 +67,7 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 func (a *App) initGrpcServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.grpcServer = grpc.NewServer(grpc.UnaryInterceptor(tracing.UnaryServerInterceptor("payment-service")))
 
 	healthServer := health.NewServer()
 	grpc_health_v1.RegisterHealthServer(a.grpcServer, healthServer)

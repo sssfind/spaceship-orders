@@ -7,17 +7,17 @@ import (
 	"net/http"
 	"syscall"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	healthAPI "order/internal/api/health"
 	"order/internal/config"
 	customMiddleware "order/internal/middleware"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
 	platformMigrator "platform/pkg/migrator/pg"
+	"platform/pkg/tracing"
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type App struct {
@@ -42,13 +42,21 @@ func NewApp(ctx context.Context) (*App, error) {
 		Outputs:               cfg.Outputs(),
 		OtelCollectorEndpoint: cfg.OtelCollectorEndpoint(),
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
 
 	closer.AddNamed("logger", func(c context.Context) error {
 		return logger.Shutdown(c)
+	})
+
+	err = tracing.InitTracer(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init tracer: %w", err)
+	}
+
+	closer.AddNamed("tracer", func(c context.Context) error {
+		return tracing.ShutdownTracer(c)
 	})
 
 	a.serviceProvider = newServiceProvider(cfg)

@@ -12,7 +12,6 @@ type LoggerConfig interface {
 	ServiceName() string
 	Outputs() []string
 	OtelCollectorEndpoint() string
-
 }
 
 type PostgresConfig interface {
