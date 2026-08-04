@@ -5,7 +5,7 @@
 ![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**Spaceship Orders** - это распределённая микросервисная платформа для заказа, оплаты и сборки космических кораблей. Проект спроектирован по принципам чистой архитектуры
+**Spaceship Orders** - это распределённая микросервисная платформа для заказа, оплаты и сборки космических кораблей. Проект спроектирован по принципам чистой архитектуры и включает полный комплекс систем наблюдения
 
 ---
 
@@ -27,6 +27,17 @@ graph TD
     AssemblyService -->|Publish ship-assembled| Kafka
     Kafka -->|Consume ship-assembled| OrderService
     
+    %% Telemetry Pipeline
+    OrderService -.->|Logs / Traces / Metrics| OTEL[OTEL Collector]
+    PaymentService -.->|Logs / Traces| OTEL
+    AssemblyService -.->|Logs / Metrics| OTEL
+    
+    OTEL -.->|Traces| Jaeger[(Jaeger)]
+    OTEL -.->|Logs| ES[(Elasticsearch)] --> Kibana[(Kibana)]
+    Prometheus[(Prometheus)] -.->|Pull Metrics| OrderService
+    Prometheus -.->|Pull Metrics| AssemblyService
+    Prometheus --> Grafana[(Grafana)]
+
     %% Databases
     OrderService -->|pgx/v5| PostgresOrder[(PostgreSQL Orders)]
     IAMService -->|lib/pq| PostgresIAM[(PostgreSQL IAM)]
@@ -38,11 +49,13 @@ graph TD
     classDef db fill:#2d1b4e,stroke:#4a327a,stroke-width:2px,color:#e2d9f3;
     classDef broker fill:#0f3d59,stroke:#176087,stroke-width:2px,color:#fff;
     classDef client fill:#1b4d3e,stroke:#2d725f,stroke-width:2px,color:#fff;
+    classDef obs fill:#3d2b1f,stroke:#63432b,stroke-width:2px,color:#fff;
     
     class OrderService,InventoryService,IAMService,PaymentService,AssemblyService service;
     class PostgresOrder,PostgresIAM,RedisIAM,MongoInventory db;
     class Kafka broker;
     class User client;
+    class OTEL,Jaeger,ES,Kibana,Prometheus,Grafana obs;
 ```
 
 ---
@@ -51,18 +64,63 @@ graph TD
 
 Проект разработан с использованием современного стека технологий, ориентированного на производительность и строгую типизацию контрактов:
 
-| Слой / Компонент         | Технология                              | Описание                                                                    |
-| :----------------------- | :-------------------------------------- | :-------------------------------------------------------------------------- |
-| **Язык разработки**      | **Go 1.26**                             | Использование новейших возможностей языка для высокой производительности.   |
-| **Синхронный транспорт** | **gRPC & REST**                         | Внутреннее взаимодействие по gRPC, внешнее по HTTP                          |
-| **Генерация кода API**   | **OpenAPI (Ogen) & Protobuf (Buf)**     | Схемы являются единственным источником правды                               |
-| **Брокер сообщений**     | **Apache Kafka (Sarama)**               | Асинхронный event-driven пайплайн для сборки кораблей                       |
-| **Базы данных**          | **PostgreSQL (pgx/v5), MongoDB, Redis** | Оптимальный выбор СУБД под задачи каждого отдельного микросервиса           |
-| **Качество кода**        | **Golangci-lint, Gofumpt, Gci**         | Строгие правила форматирования кода и статического анализа                  |
-| **Тестирование**         | **Testcontainers-go, Mockery**          | Компонентные тесты в изолированных контейнерах Docker и автогенерация моков |
-| **Оркестрация**          | **Docker Compose, Taskfile**            | Удобное локальное окружение и автоматизация рутинных действий               |
+| Слой / Компонент            | Технология                                     | Описание                                                                    |
+|:----------------------------|:-----------------------------------------------|:----------------------------------------------------------------------------|
+| **Язык разработки**         | **Go 1.26**                                    | Использование новейших возможностей языка для высокой производительности.   |
+| **Синхронный транспорт**    | **gRPC & REST**                                | Внутреннее взаимодействие по gRPC, внешнее по HTTP                          |
+| **Генерация кода API**      | **OpenAPI (Ogen) & Protobuf (Buf)**            | Схемы являются единственным источником правды                               |
+| **Брокер сообщений**        | **Apache Kafka (Sarama)**                      | Асинхронный event-driven пайплайн для сборки кораблей                       |
+| **Базы данных**             | **PostgreSQL (pgx/v5), MongoDB, Redis**        | Оптимальный выбор СУБД под задачи каждого отдельного микросервиса           |
+| **Распределённый трейсинг** | **OpenTelemetry Go SDK & Jaeger**              | Сквозная трассировка запросов (HTTP -> Order -> gRPC -> Payment)            |
+| **Централизованные логи**   | **Zap, OTEL Collector, Elasticsearch, Kibana** | Двойная запись логов (stdout + OTLP/gRPC) в структурированном JSON          |
+| **Метрики и Мониторинг**    | **Prometheus & Grafana**                       | Сбор бизнес-метрик и технической гистограммы длительности операций          |
+| **Качество кода**           | **Golangci-lint, Gofumpt, Gci**                | Строгие правила форматирования кода и статического анализа                  |
+| **Тестирование**            | **Testcontainers-go, Mockery**                 | Компонентные тесты в изолированных контейнерах Docker и автогенерация моков |
+| **Оркестрация**             | **Docker Compose, Taskfile**                   | Удобное локальное окружение и автоматизация рутинных действий               |
 
 ---
+
+## Observability & Мониторинг
+Система полностью инструментирована для наблюдения за состоянием микросервисов в реальном времени
+
+### Распределённый трейсинг (OpenTelemetry + Jaeger)
+
+Реализован сквозной проброс Trace Context через HTTP-заголовки и gRPC-метаданные. Сценарий оплаты `PayOrder` формирует целостный дерево-трейс:
+
+- `OrderService` (HTTP Handler) -> `OrderService` (Business Logic) -> `PaymentClient` (gRPC Outgoing) -> `PaymentService` (gRPC Server) -> `ProcessPayment` (Domain)
+
+
+### Централизованное логирование (EFK / OTLP)
+
+Платформенный логгер (`/platform/pkg/logger`) поддерживает мульти-экспорт:
+
+1. **stdout**: Консольная печать
+
+2. **OTLP/gRPC**: Прямая отправка батчей в `otel-collector` (порт `4317`) с дублированием логов в Elasticsearch и визуализацией в Kibana
+
+3. Логи автоматически обогащаются полями `trace_id` и `user_id` из контекста вызова
+
+
+### 📊 Метрики и Дашборды (Prometheus + Grafana)
+
+В сервисы добавлены ключевые метрики:
+
+- `orders_total` — счётчик созданных заказов (`OrderService`)
+
+- `orders_revenue_total` — суммарная выручка (`OrderService`)
+
+- `assembly_duration_seconds` — гистограмма времени сборки корабля (`AssemblyService`)
+
+
+| Сервис     | URL                      | Назначение                                    |
+| ---------- | ------------------------ | --------------------------------------------- |
+| Jaeger UI  | `http://localhost:16686` | Поиск и анализ распределённых трейсов         |
+| Kibana     | http://localhost:5601    | Просмотр и фильтрация централизованных логов  |
+| Grafana    | http://localhost:3000    | Визуализация метрик и дашбордов (admin/admin) |
+| Prometheus | http://localhost:9090    | Просмотр метрик и выполнения PromQL-запросов  |
+| Kafka UI   | http://localhost:8080    | Мониторинг топиков и групп консьюмеров Kafka  |
+
+
 
 ## Структура репозитория
 
@@ -71,11 +129,11 @@ graph TD
 *   [assembly/](./assembly) — микросервис сборки кораблей (эмулирует физический процесс сборки, потребляя события из Kafka)
 *   [iam/](./iam) — сервис идентификации и аутентификации (регистрация, логин, сессии в Redis)
 *   [inventory/](./inventory) — каталог запчастей и комплектующих для космических кораблей (хранилище MongoDB)
-*   [order/](./order) — ядро системы: создание заказов, расчет стоимости, API для клиентов
-*   [payment/](./payment) — сервис-заглушка для имитации транзакций оплаты
-*   [platform/](./platform) — общая разделяемая библиотека (логирование, Graceful Shutdown, обертки над gRPC/Kafka/Redis)
+*   [order/](./order) — ядро системы: создание заказов, расчет стоимости, API для клиентов, генерация метрик выручки, инициатор трейсо
+*   [payment/](./payment) — сервис-заглушка для имитации транзакций оплаты (подхватывает OTel context из gRPC)
+*   [platform/](./platform) — общая разделяемая библиотека (логирование stdout+OTLP, трейсинг OpenTelemetry, Graceful Shutdown, обертки над gRPC/Kafka/Redis)
 *   [shared/](./shared) — общие схемы Protobuf/OpenAPI и сгенерированный на их основе код
-*   [deploy/](./deploy) — инфраструктурные манифесты, Dockerfile и конфигурационные файлы Docker Compose
+*   [deploy/](./deploy) — инфраструктурные манифесты, Dockerfile, конфигурации OTel Collector, Prometheus, Grafana и конфигурационные файлы Docker Compose
 
 ---
 
@@ -170,18 +228,12 @@ task test-api-with-auth
 Проект разрабатывается итеративно. На данный момент полностью реализована микросервисная база и событийная модель взаимодействия (завершены первые 6 недель дорожной карты)
 
 - [x] **Фаза 1–2: Базовые микросервисы и CI/CD**
-   - Реализовано синхронное взаимодействие по HTTP/REST и gRPC (сервисы Order, Inventory, Payment)
-   - Внедрена Clean Architecture, написаны интеграционные тесты с Testcontainers
-   - Настроены пайплайны GitHub Actions для проверки качества кода
+    - Реализовано синхронное взаимодействие по HTTP/REST и gRPC (сервисы Order, Inventory, Payment)
+    - Внедрена Clean Architecture, написаны интеграционные тесты с Testcontainers
+    - Настроены пайплайны GitHub Actions для проверки качества кода
 - [x] **Фаза 3: Event-Driven архитектура**
-   - Поднят брокер Apache Kafka (KRaft)
-   - Настроены консьюмеры и продюсеры для асинхронных процессов (Assembly Service, Notification Service)
-   - Окружение полностью упаковано в Docker Compose
-- [ ] **Фаза 4: Observability (В процессе)**
-   - Инструментирование Go-кода: сбор бизнес-метрик (Prometheus), распределенная трассировка (OpenTelemetry + Jaeger) и централизованное логирование
-- [ ] **Фаза 5: Infrastructure as Code (IaC)**
-   - Автоматизация развертывания отказоустойчивого кластера БД (HA PostgreSQL + Patroni) в облаке с помощью Terraform и Ansible
-- [ ] **Фаза 6: Kubernetes & GitOps**
-   - Развертывание K8s-кластера, упаковка сервисов в Helm-чарты, деплой через ArgoCD и управление секретами через SOPS
-- [ ] **Фаза 7: Chaos Engineering & SRE**
-   - Проведение контролируемых сбоев с помощью Chaos Mesh и генерация нагрузок k6 для проверки показателей RTO/RPO
+    - Поднят брокер Apache Kafka (KRaft)
+    - Настроены консьюмеры и продюсеры для асинхронных процессов (Assembly Service, Notification Service)
+    - Окружение полностью упаковано в Docker Compose
+- [x] **Фаза 4: Observability (В процессе)**
+    - Инструментирование Go-кода: сбор бизнес-метрик (Prometheus), распределенная трассировка (OpenTelemetry + Jaeger) и централизованное логирование
