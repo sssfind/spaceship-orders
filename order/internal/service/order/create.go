@@ -2,7 +2,6 @@ package order
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 	"order/internal/metrics"
@@ -10,19 +9,8 @@ import (
 )
 
 func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []uuid.UUID) (*model.Order, error) {
-	parts, err := s.inventoryClient.ListParts(ctx, partUUIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(parts) != len(partUUIDs) {
-		return nil, errors.New("some parts not found")
-	}
-
-	var totalPrice float64
-	for _, p := range parts {
-		totalPrice += p.Price
-	}
+	// Для ДЗ: упрощаем создание заказа, пока нет таблицы деталей
+	totalPrice := 100.0 * float64(len(partUUIDs))
 
 	newOrder := &model.Order{
 		OrderUUID:  uuid.New(),
@@ -32,7 +20,7 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 		Status:     model.StatusPendingPayment,
 	}
 
-	err = s.orderRepo.Create(ctx, newOrder)
+	err := s.orderRepo.Create(ctx, newOrder)
 	if err != nil {
 		return nil, err
 	}

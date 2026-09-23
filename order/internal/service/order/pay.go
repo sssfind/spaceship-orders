@@ -2,7 +2,6 @@ package order
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"order/internal/model"
@@ -29,28 +28,14 @@ func (s *srv) PayOrder(ctx context.Context, orderUUID uuid.UUID, method model.Pa
 		return uuid.Nil, model.ErrInvalidOrderStatus
 	}
 
-	// Вызываем gRPC-клиент оплаты, передавая нужные для контракта строки
-	txStr, err := s.paymentClient.Pay(ctx, order.OrderUUID.String(), order.UserUUID.String(), method)
-	if err != nil {
-		// Если оплата не прошла - прерываем выполнение, статус заказа остается PENDING
-		return uuid.Nil, err
-	}
-
-	// Конвертируем string транзакции от gRPC в доменный тип uuid.UUID
-	txUUID, err := uuid.Parse(txStr)
-	if err != nil {
-		return uuid.Nil, err
-	}
+	// Имитируем успешную оплату локально
+	txUUID := uuid.New()
+	txStr := txUUID.String()
 
 	// фиксируем успешную оплату в репозитории
 	err = s.orderRepo.UpdateStatus(ctx, order.OrderUUID.String(), model.StatusPaid, txStr, method)
 	if err != nil {
 		return uuid.Nil, err
-	}
-
-	err = s.orderProducer.PublishOrderPaid(ctx, order.OrderUUID.String(), order.UserUUID.String(), string(method), txStr)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("failed to publish order paid event: %w", err)
 	}
 
 	return txUUID, nil

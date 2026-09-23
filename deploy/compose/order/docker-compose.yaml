@@ -31,8 +31,6 @@ services:
       - "${HTTP_PORT}:${HTTP_PORT}"
     env_file:
       - .env
-    environment:
-      KAFKA_SHIP_ASSEMBLED_GROUP_ID: "order-service-group"
     networks:
       - spaceship_network
     depends_on:

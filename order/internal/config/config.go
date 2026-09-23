@@ -10,13 +10,8 @@ import (
 type Config struct {
 	LoggerConfig
 	TracerConfig
-	InventoryGrpcConfig
-	PaymentGrpcConfig
 	OrderHttpConfig
 	PostgresConfig
-	KafkaConfig
-	OrderPaidProducerConfig
-	OrderAssembledConsumerConfig
 }
 
 func Load() (*Config, error) {
@@ -32,16 +27,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("tracer config error: %w", err)
 	}
 
-	inventoryCfg, err := env.NewInventoryGrpcConfig()
-	if err != nil {
-		return nil, fmt.Errorf("inventory config error: %w", err)
-	}
-
-	paymentCfg, err := env.NewPaymentGrpcConfig()
-	if err != nil {
-		return nil, fmt.Errorf("payment config error: %w", err)
-	}
-
 	httpCfg, err := env.NewOrderHTTPConfig()
 	if err != nil {
 		return nil, fmt.Errorf("http config error: %w", err)
@@ -52,31 +37,11 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("postgres config error: %w", err)
 	}
 
-	kafkaCfg, err := env.NewKafkaConfig()
-	if err != nil {
-		return nil, fmt.Errorf("kafka config error: %w", err)
-	}
-
-	paidProducerCfg, err := env.NewOrderPaidProducerConfig()
-	if err != nil {
-		return nil, fmt.Errorf("order paid producer config error: %w", err)
-	}
-
-	assembledConsumerCfg, err := env.NewOrderAssembledConsumerConfig()
-	if err != nil {
-		return nil, fmt.Errorf("order assembled consumer config error: %w", err)
-	}
-
 	return &Config{
-		LoggerConfig:                 loggerCfg,
-		TracerConfig:                 tracerCfg,
-		InventoryGrpcConfig:          inventoryCfg,
-		PaymentGrpcConfig:            paymentCfg,
-		OrderHttpConfig:              httpCfg,
-		PostgresConfig:               postgresCfg,
-		KafkaConfig:                  kafkaCfg,
-		OrderPaidProducerConfig:      paidProducerCfg,
-		OrderAssembledConsumerConfig: assembledConsumerCfg,
+		LoggerConfig:    loggerCfg,
+		TracerConfig:    tracerCfg,
+		OrderHttpConfig: httpCfg,
+		PostgresConfig:  postgresCfg,
 	}, nil
 }
 

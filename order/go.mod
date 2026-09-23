@@ -3,16 +3,12 @@ module order
 go 1.26
 
 require (
-	github.com/IBM/sarama v1.60.0
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.24.1
-	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0
-	google.golang.org/grpc v1.82.0
-	google.golang.org/protobuf v1.36.11
 )
 
 require (

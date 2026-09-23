@@ -122,18 +122,6 @@ func (a *App) Run() error {
 
 	ctx := context.Background()
 
-	cons, err := a.serviceProvider.OrderConsumer(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to run order consumer: %w", err)
-	}
-
-	go func() {
-		logger.Info(ctx, "Order Service Kafka Consumer is starting...")
-		if err := cons.Run(ctx); err != nil {
-			logger.Error(ctx, fmt.Sprintf("Order Consumer stopped with error: %v", err))
-		}
-	}()
-
 	logger.Info(ctx, fmt.Sprintf("order HTTP Server успешно запущен на %s", a.httpServer.Addr))
 
 	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
