@@ -84,6 +84,19 @@ func (s *CreateOrderResponse) SetTotalPrice(val float64) {
 
 func (*CreateOrderResponse) createOrderRes() {}
 
+type DeleteOrderInternalServerError GenericError
+
+func (*DeleteOrderInternalServerError) deleteOrderRes() {}
+
+// DeleteOrderNoContent is response for DeleteOrder operation.
+type DeleteOrderNoContent struct{}
+
+func (*DeleteOrderNoContent) deleteOrderRes() {}
+
+type DeleteOrderNotFound GenericError
+
+func (*DeleteOrderNotFound) deleteOrderRes() {}
+
 // Ref: #/components/schemas/generic_error
 type GenericError struct {
 	Code    int    `json:"code"`
@@ -111,6 +124,18 @@ func (s *GenericError) SetMessage(val string) {
 }
 
 func (*GenericError) getOrderByUUIDRes() {}
+
+type ListOrdersBadRequest GenericError
+
+func (*ListOrdersBadRequest) listOrdersRes() {}
+
+type ListOrdersInternalServerError GenericError
+
+func (*ListOrdersInternalServerError) listOrdersRes() {}
+
+type ListOrdersOKApplicationJSON []OrderDto
+
+func (*ListOrdersOKApplicationJSON) listOrdersRes() {}
 
 // NewOptNilPaymentMethod returns new OptNilPaymentMethod with value set to v.
 func NewOptNilPaymentMethod(v PaymentMethod) OptNilPaymentMethod {

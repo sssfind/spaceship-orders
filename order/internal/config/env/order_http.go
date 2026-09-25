@@ -17,7 +17,7 @@ func NewOrderHTTPConfig() (*orderHTTP, error) {
 	host := os.Getenv("HTTP_HOST")
 	port := os.Getenv("HTTP_PORT")
 	if host == "" || port == "" {
-		return nil, errors.New("HHTP_HOST and PORT is not set")
+		return nil, errors.New("HTTP_HOST and HTTP_PORT are not set")
 	}
 
 	timeoutStr := os.Getenv("HTTP_READ_TIMEOUT")

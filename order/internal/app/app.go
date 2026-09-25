@@ -17,6 +17,7 @@ import (
 	"platform/pkg/logger"
 	platformMigrator "platform/pkg/migrator/pg"
 	"platform/pkg/tracing"
+
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 )
 

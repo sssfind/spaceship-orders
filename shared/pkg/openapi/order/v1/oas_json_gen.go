@@ -404,6 +404,82 @@ func (s *CreateOrderResponse) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes DeleteOrderInternalServerError as json.
+func (s *DeleteOrderInternalServerError) Encode(e *jx.Encoder) {
+	unwrapped := (*GenericError)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes DeleteOrderInternalServerError from json.
+func (s *DeleteOrderInternalServerError) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode DeleteOrderInternalServerError to nil")
+	}
+	var unwrapped GenericError
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = DeleteOrderInternalServerError(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *DeleteOrderInternalServerError) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *DeleteOrderInternalServerError) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes DeleteOrderNotFound as json.
+func (s *DeleteOrderNotFound) Encode(e *jx.Encoder) {
+	unwrapped := (*GenericError)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes DeleteOrderNotFound from json.
+func (s *DeleteOrderNotFound) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode DeleteOrderNotFound to nil")
+	}
+	var unwrapped GenericError
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = DeleteOrderNotFound(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *DeleteOrderNotFound) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *DeleteOrderNotFound) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *GenericError) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -513,6 +589,132 @@ func (s *GenericError) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *GenericError) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ListOrdersBadRequest as json.
+func (s *ListOrdersBadRequest) Encode(e *jx.Encoder) {
+	unwrapped := (*GenericError)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes ListOrdersBadRequest from json.
+func (s *ListOrdersBadRequest) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ListOrdersBadRequest to nil")
+	}
+	var unwrapped GenericError
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ListOrdersBadRequest(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *ListOrdersBadRequest) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ListOrdersBadRequest) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ListOrdersInternalServerError as json.
+func (s *ListOrdersInternalServerError) Encode(e *jx.Encoder) {
+	unwrapped := (*GenericError)(s)
+
+	unwrapped.Encode(e)
+}
+
+// Decode decodes ListOrdersInternalServerError from json.
+func (s *ListOrdersInternalServerError) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ListOrdersInternalServerError to nil")
+	}
+	var unwrapped GenericError
+	if err := func() error {
+		if err := unwrapped.Decode(d); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ListOrdersInternalServerError(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *ListOrdersInternalServerError) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ListOrdersInternalServerError) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ListOrdersOKApplicationJSON as json.
+func (s ListOrdersOKApplicationJSON) Encode(e *jx.Encoder) {
+	unwrapped := []OrderDto(s)
+
+	e.ArrStart()
+	for _, elem := range unwrapped {
+		elem.Encode(e)
+	}
+	e.ArrEnd()
+}
+
+// Decode decodes ListOrdersOKApplicationJSON from json.
+func (s *ListOrdersOKApplicationJSON) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ListOrdersOKApplicationJSON to nil")
+	}
+	var unwrapped []OrderDto
+	if err := func() error {
+		unwrapped = make([]OrderDto, 0)
+		if err := d.Arr(func(d *jx.Decoder) error {
+			var elem OrderDto
+			if err := elem.Decode(d); err != nil {
+				return err
+			}
+			unwrapped = append(unwrapped, elem)
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ListOrdersOKApplicationJSON(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ListOrdersOKApplicationJSON) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ListOrdersOKApplicationJSON) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

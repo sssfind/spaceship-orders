@@ -3,6 +3,8 @@
 package order
 
 import (
+	"fmt"
+
 	"github.com/go-faster/errors"
 
 	"github.com/ogen-go/ogen/validate"
@@ -47,6 +49,31 @@ func (s *CreateOrderResponse) Validate() error {
 			Name:  "total_price",
 			Error: err,
 		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s ListOrdersOKApplicationJSON) Validate() error {
+	alias := ([]OrderDto)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
 	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}

@@ -31,12 +31,30 @@ func (UnimplementedHandler) CreateOrder(ctx context.Context, req *CreateOrderReq
 	return r, ht.ErrNotImplemented
 }
 
+// DeleteOrder implements deleteOrder operation.
+//
+// Удалить заказ.
+//
+// DELETE /api/v1/orders/{order_uuid}
+func (UnimplementedHandler) DeleteOrder(ctx context.Context, params DeleteOrderParams) (r DeleteOrderRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetOrderByUUID implements getOrderByUUID operation.
 //
 // Получить заказ по UUID.
 //
 // GET /api/v1/orders/{order_uuid}
 func (UnimplementedHandler) GetOrderByUUID(ctx context.Context, params GetOrderByUUIDParams) (r GetOrderByUUIDRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListOrders implements listOrders operation.
+//
+// Список заказов.
+//
+// GET /api/v1/orders
+func (UnimplementedHandler) ListOrders(ctx context.Context) (r ListOrdersRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -20,12 +20,24 @@ type Handler interface {
 	//
 	// POST /api/v1/orders
 	CreateOrder(ctx context.Context, req *CreateOrderRequest) (CreateOrderRes, error)
+	// DeleteOrder implements deleteOrder operation.
+	//
+	// Удалить заказ.
+	//
+	// DELETE /api/v1/orders/{order_uuid}
+	DeleteOrder(ctx context.Context, params DeleteOrderParams) (DeleteOrderRes, error)
 	// GetOrderByUUID implements getOrderByUUID operation.
 	//
 	// Получить заказ по UUID.
 	//
 	// GET /api/v1/orders/{order_uuid}
 	GetOrderByUUID(ctx context.Context, params GetOrderByUUIDParams) (GetOrderByUUIDRes, error)
+	// ListOrders implements listOrders operation.
+	//
+	// Список заказов.
+	//
+	// GET /api/v1/orders
+	ListOrders(ctx context.Context) (ListOrdersRes, error)
 	// PayOrder implements payOrder operation.
 	//
 	// Оплата заказа.

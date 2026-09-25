@@ -35,6 +35,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/internal_server_error'
+    get:
+      summary: Список заказов
+      operationId: listOrders
+      responses:
+        '200':
+          description: Список заказов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/order_dto'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_request_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
   /api/v1/orders/{order_uuid}:
     get:
       summary: Получить заказ по UUID
@@ -54,6 +78,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/not_found_error'
+    delete:
+      summary: Удалить заказ
+      operationId: deleteOrder
+      parameters:
+        - $ref: '#/components/parameters/order_uuid'
+      responses:
+        '204':
+          description: Заказ удален
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
   /api/v1/orders/{order_uuid}/pay:
     post:
       summary: Оплата заказа
@@ -114,69 +158,6 @@ paths:
                 $ref: '#/components/schemas/conflict_error'
 components:
   schemas:
-    create_order_request:
-      type: object
-      required:
-        - user_uuid
-        - part_uuids
-      properties:
-        user_uuid:
-          type: string
-          formet: uuid
-          description: Уникальный идентификатор пользователяъ
-          example: 1b2deb4d-3a7d-4bad-9bdg-2b0d7b3ycb6d
-        part_uuids:
-          type: array
-          description: Список UUID деталей, входящих в заказ
-          items:
-            type: string
-            format: uuid
-          example:
-            - 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
-    create_order_response:
-      type: object
-      required:
-        - order_uuid
-        - total_price
-      properties:
-        order_uuid:
-          type: string
-          format: uuid
-        total_price:
-          type: number
-          format: double
-    generic_error:
-      type: object
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: integer
-        message:
-          type: string
-    bad_request_error:
-      allOf:
-        - $ref: '#/components/schemas/generic_error'
-      type: object
-      properties:
-        code:
-          type: integer
-          example: 400
-        message:
-          type: string
-          example: Bad Request
-    internal_server_error:
-      allOf:
-        - $ref: '#/components/schemas/generic_error'
-      type: object
-      properties:
-        code:
-          type: integer
-          example: 500
-        message:
-          type: string
-          example: Internal Server Error
     payment_method:
       type: string
       description: Способ оплаты заказа
@@ -240,6 +221,69 @@ components:
           nullable: true
         status:
           $ref: '#/components/schemas/order_status'
+    generic_error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    bad_request_error:
+      allOf:
+        - $ref: '#/components/schemas/generic_error'
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Bad Request
+    internal_server_error:
+      allOf:
+        - $ref: '#/components/schemas/generic_error'
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 500
+        message:
+          type: string
+          example: Internal Server Error
+    create_order_request:
+      type: object
+      required:
+        - user_uuid
+        - part_uuids
+      properties:
+        user_uuid:
+          type: string
+          formet: uuid
+          description: Уникальный идентификатор пользователяъ
+          example: 1b2deb4d-3a7d-4bad-9bdg-2b0d7b3ycb6d
+        part_uuids:
+          type: array
+          description: Список UUID деталей, входящих в заказ
+          items:
+            type: string
+            format: uuid
+          example:
+            - 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+    create_order_response:
+      type: object
+      required:
+        - order_uuid
+        - total_price
+      properties:
+        order_uuid:
+          type: string
+          format: uuid
+        total_price:
+          type: number
+          format: double
     not_found_error:
       allOf:
         - $ref: '#/components/schemas/generic_error'

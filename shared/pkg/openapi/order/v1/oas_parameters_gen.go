@@ -81,6 +81,71 @@ func decodeCancelOrderParams(args [1]string, argsEscaped bool, r *http.Request) 
 	return params, nil
 }
 
+// DeleteOrderParams is parameters of deleteOrder operation.
+type DeleteOrderParams struct {
+	OrderUUID uuid.UUID
+}
+
+func unpackDeleteOrderParams(packed middleware.Parameters) (params DeleteOrderParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "order_uuid",
+			In:   "path",
+		}
+		params.OrderUUID = packed[key].(uuid.UUID)
+	}
+	return params
+}
+
+func decodeDeleteOrderParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteOrderParams, _ error) {
+	// Decode path: order_uuid.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "order_uuid",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.OrderUUID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "order_uuid",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetOrderByUUIDParams is parameters of getOrderByUUID operation.
 type GetOrderByUUIDParams struct {
 	OrderUUID uuid.UUID

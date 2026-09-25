@@ -16,3 +16,24 @@ get:
         application/json:
           schema:
             $ref: '../components/errors/not_found_error.yaml'
+
+delete:
+  summary: Удалить заказ 
+  operationId: deleteOrder
+  parameters:
+    - $ref: '../params/order_uuid.yaml'
+  responses:
+    '204':
+      description: Заказ удален
+    '404':
+      description: Заказ не найден
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/not_found_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

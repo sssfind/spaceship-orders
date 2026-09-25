@@ -10,4 +10,6 @@ type OrderRepository interface {
 	Create(ctx context.Context, order *model.Order) error
 	Get(ctx context.Context, orderUUID string) (*model.Order, error)
 	UpdateStatus(ctx context.Context, orderUUID string, status model.OrderStatus, txUUID string, method model.PaymentMethod) error
+	List(ctx context.Context) ([]*model.Order, error)
+	Delete(ctx context.Context, orderUUID string) error
 }

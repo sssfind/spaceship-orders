@@ -12,16 +12,17 @@ import (
 	"order/internal/service"
 	orderImpl "order/internal/service/order"
 	"platform/pkg/closer"
+
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 )
 
 type serviceProvider struct {
 	cfg *config.Config
 
-	dbPool          *pgxpool.Pool
-	orderRepo       repository.OrderRepository
-	orderSrv        service.OrderService
-	apiHandler      orderV1.Handler
+	dbPool     *pgxpool.Pool
+	orderRepo  repository.OrderRepository
+	orderSrv   service.OrderService
+	apiHandler orderV1.Handler
 }
 
 func newServiceProvider(cfg *config.Config) *serviceProvider {

@@ -26,3 +26,28 @@ post:
         application/json:
           schema:
             $ref: '../components/errors/internal_server_error.yaml'
+
+get:
+  summary: Список заказов
+  operationId: listOrders
+  responses:
+    '200':
+      description: Список заказов
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../components/order_dto.yaml'
+    '400':
+      description: Неверный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/bad_request_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

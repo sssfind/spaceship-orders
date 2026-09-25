@@ -59,10 +59,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			if len(elem) == 0 {
 				switch r.Method {
+				case "GET":
+					s.handleListOrdersRequest([0]string{}, elemIsEscaped, w, r)
 				case "POST":
 					s.handleCreateOrderRequest([0]string{}, elemIsEscaped, w, r)
 				default:
-					s.notAllowed(w, r, "POST")
+					s.notAllowed(w, r, "GET,POST")
 				}
 
 				return
@@ -87,12 +89,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				if len(elem) == 0 {
 					switch r.Method {
+					case "DELETE":
+						s.handleDeleteOrderRequest([1]string{
+							args[0],
+						}, elemIsEscaped, w, r)
 					case "GET":
 						s.handleGetOrderByUUIDRequest([1]string{
 							args[0],
 						}, elemIsEscaped, w, r)
 					default:
-						s.notAllowed(w, r, "GET")
+						s.notAllowed(w, r, "DELETE,GET")
 					}
 
 					return
@@ -250,6 +256,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 			if len(elem) == 0 {
 				switch method {
+				case "GET":
+					r.name = ListOrdersOperation
+					r.summary = "Список заказов"
+					r.operationID = "listOrders"
+					r.pathPattern = "/api/v1/orders"
+					r.args = args
+					r.count = 0
+					return r, true
 				case "POST":
 					r.name = CreateOrderOperation
 					r.summary = "Создание заказа"
@@ -282,6 +296,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 				if len(elem) == 0 {
 					switch method {
+					case "DELETE":
+						r.name = DeleteOrderOperation
+						r.summary = "Удалить заказ"
+						r.operationID = "deleteOrder"
+						r.pathPattern = "/api/v1/orders/{order_uuid}"
+						r.args = args
+						r.count = 1
+						return r, true
 					case "GET":
 						r.name = GetOrderByUUIDOperation
 						r.summary = "Получить заказ по UUID"

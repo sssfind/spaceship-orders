@@ -9,8 +9,16 @@ type CreateOrderRes interface {
 	createOrderRes()
 }
 
+type DeleteOrderRes interface {
+	deleteOrderRes()
+}
+
 type GetOrderByUUIDRes interface {
 	getOrderByUUIDRes()
+}
+
+type ListOrdersRes interface {
+	listOrdersRes()
 }
 
 type PayOrderRes interface {

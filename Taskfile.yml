@@ -263,6 +263,7 @@ tasks:
 
   run:
     desc: "Запуск Order локально (нужен Postgres и .env)"
+    deps: [env:generate]
     dir: order
     cmds:
       - go run ./cmd
