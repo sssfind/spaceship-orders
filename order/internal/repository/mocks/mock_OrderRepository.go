@@ -69,6 +69,53 @@ func (_c *MockOrderRepository_Create_Call) RunAndReturn(run func(context.Context
 	return _c
 }
 
+// Delete provides a mock function with given fields: ctx, orderUUID
+func (_m *MockOrderRepository) Delete(ctx context.Context, orderUUID string) error {
+	ret := _m.Called(ctx, orderUUID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, orderUUID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockOrderRepository_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type MockOrderRepository_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - orderUUID string
+func (_e *MockOrderRepository_Expecter) Delete(ctx interface{}, orderUUID interface{}) *MockOrderRepository_Delete_Call {
+	return &MockOrderRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, orderUUID)}
+}
+
+func (_c *MockOrderRepository_Delete_Call) Run(run func(ctx context.Context, orderUUID string)) *MockOrderRepository_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockOrderRepository_Delete_Call) Return(_a0 error) *MockOrderRepository_Delete_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockOrderRepository_Delete_Call) RunAndReturn(run func(context.Context, string) error) *MockOrderRepository_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function with given fields: ctx, orderUUID
 func (_m *MockOrderRepository) Get(ctx context.Context, orderUUID string) (*model.Order, error) {
 	ret := _m.Called(ctx, orderUUID)
@@ -124,6 +171,64 @@ func (_c *MockOrderRepository_Get_Call) Return(_a0 *model.Order, _a1 error) *Moc
 }
 
 func (_c *MockOrderRepository_Get_Call) RunAndReturn(run func(context.Context, string) (*model.Order, error)) *MockOrderRepository_Get_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// List provides a mock function with given fields: ctx
+func (_m *MockOrderRepository) List(ctx context.Context) ([]*model.Order, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for List")
+	}
+
+	var r0 []*model.Order
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*model.Order, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []*model.Order); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*model.Order)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockOrderRepository_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type MockOrderRepository_List_Call struct {
+	*mock.Call
+}
+
+// List is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockOrderRepository_Expecter) List(ctx interface{}) *MockOrderRepository_List_Call {
+	return &MockOrderRepository_List_Call{Call: _e.mock.On("List", ctx)}
+}
+
+func (_c *MockOrderRepository_List_Call) Run(run func(ctx context.Context)) *MockOrderRepository_List_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *MockOrderRepository_List_Call) Return(_a0 []*model.Order, _a1 error) *MockOrderRepository_List_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockOrderRepository_List_Call) RunAndReturn(run func(context.Context) ([]*model.Order, error)) *MockOrderRepository_List_Call {
 	_c.Call.Return(run)
 	return _c
 }

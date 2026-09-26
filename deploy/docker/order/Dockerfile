@@ -13,6 +13,9 @@ WORKDIR /app
 COPY --from=builder /bin/app /app/server
 
 COPY order/migrations ./migrations
+COPY frontend ./frontend
+
+ENV FRONTEND_DIR=/app/frontend
 
 EXPOSE 8080
 

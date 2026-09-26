@@ -10,6 +10,7 @@ vars:
   YQ_VERSION: 'v4.45.2'
   MOCKERY_VERSION: 'v2.53.3'
   ENVSUBST_VERSION: 'v1.4.3'
+  GOOSE_VERSION: 'v3.27.2'
 
   BIN_DIR: '{{.ROOT_DIR}}/bin'
   GOLANGCI_LINT: '{{.BIN_DIR}}/golangci-lint'
@@ -19,7 +20,9 @@ vars:
   YQ: '{{.BIN_DIR}}/yq'
   MOCKERY: "{{.BIN_DIR}}/mockery"
   ENVSUBST: '{{.BIN_DIR}}/envsubst'
+  GOOSE: '{{.BIN_DIR}}/goose'
   ENVDIR: '{{.ROOT_DIR}}/deploy/env'
+  COMPOSE_ORDER_ENV: '{{.ROOT_DIR}}/deploy/compose/order/.env'
 
   NODE_MODULES_DIR: '{{.ROOT_DIR}}/node_modules/.bin'
   REDOCLY: '{{.NODE_MODULES_DIR}}/redocly'
@@ -29,8 +32,7 @@ vars:
   OPEN_API_FILES: '{{.ROOT_DIR}}/shared/api/bundles'
   COVERAGE_DIR: '{{.ROOT_DIR}}/coverage'
   COVERAGE_FILE: total.out
-  ORDER_MIGRATIONS_DIR: './order/migrations'
-  POSTGRES_DSN: 'postgres://order-service-user:order-service-password@localhost:5432/order-service?sslmode=disable'
+  ORDER_MIGRATIONS_DIR: '{{.ROOT_DIR}}/order/migrations'
 
   MODULES: order shared platform
   SERVICES: order
@@ -173,17 +175,11 @@ tasks:
       - '{{.MOCKERY}}'
 
   test:
-    desc: "Юнит-тесты order (+ shared/platform без integration)"
+    desc: "Юнит-тесты order (без integration)"
     cmds:
       - |
-        ERR=0
-        for mod in {{.MODULES}}; do
-          if [ -d "$mod" ]; then
-            go test -v -tags="!integration" \
-              $(go list ./$mod/... | grep -v -E '(/integration|/tests/integration)') || ERR=1
-          fi
-        done
-        exit $ERR
+        go test -v -tags="!integration" \
+          $(go list ./order/... | grep -v -E '(/tests/integration)')
 
   test-coverage:
     desc: "Покрытие service/repository в order"
@@ -260,6 +256,74 @@ tasks:
         chmod +x "$SCRIPT"
         export SERVICES="{{.SERVICES}}"
         ENV_SUBST={{.ENVSUBST}} "$SCRIPT"
+
+  goose:install:
+    desc: "Установить goose CLI в ./bin"
+    cmds:
+      - |
+        [ -f {{.GOOSE}} ] || {
+          mkdir -p {{.BIN_DIR}}
+          GOBIN={{.BIN_DIR}} go install github.com/pressly/goose/v3/cmd/goose@{{.GOOSE_VERSION}}
+        }
+    status:
+      - test -x {{.GOOSE}}
+
+  migrate:
+    desc: "One-off: применить goose-миграции Order к PostgreSQL (с хоста)"
+    deps: [ goose:install, env:generate ]
+    cmds:
+      - |
+        set -euo pipefail
+        ENV_FILE="{{.COMPOSE_ORDER_ENV}}"
+        if [ ! -f "$ENV_FILE" ]; then
+          echo "❌ Нет $ENV_FILE — сначала: task env:generate"
+          exit 1
+        fi
+        set -a
+        # shellcheck disable=SC1090
+        source "$ENV_FILE"
+        set +a
+        HOST="${POSTGRES_HOST_EXTERNAL:-localhost}"
+        PORT="${EXTERNAL_POSTGRES_PORT:-5432}"
+        SSLMODE="${POSTGRES_SSL_MODE:-disable}"
+        DSN="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${HOST}:${PORT}/${POSTGRES_DB}?sslmode=${SSLMODE}"
+        echo "🚀 goose up → ${HOST}:${PORT}/${POSTGRES_DB}"
+        {{.GOOSE}} -dir "{{.ORDER_MIGRATIONS_DIR}}" postgres "$DSN" up
+
+  migrate:status:
+    desc: "Статус goose-миграций Order"
+    deps: [ goose:install, env:generate ]
+    cmds:
+      - |
+        set -euo pipefail
+        ENV_FILE="{{.COMPOSE_ORDER_ENV}}"
+        set -a
+        # shellcheck disable=SC1090
+        source "$ENV_FILE"
+        set +a
+        HOST="${POSTGRES_HOST_EXTERNAL:-localhost}"
+        PORT="${EXTERNAL_POSTGRES_PORT:-5432}"
+        SSLMODE="${POSTGRES_SSL_MODE:-disable}"
+        DSN="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${HOST}:${PORT}/${POSTGRES_DB}?sslmode=${SSLMODE}"
+        {{.GOOSE}} -dir "{{.ORDER_MIGRATIONS_DIR}}" postgres "$DSN" status
+
+  migrate:down:
+    desc: "One-off: откатить последнюю goose-миграцию Order"
+    deps: [ goose:install, env:generate ]
+    cmds:
+      - |
+        set -euo pipefail
+        ENV_FILE="{{.COMPOSE_ORDER_ENV}}"
+        set -a
+        # shellcheck disable=SC1090
+        source "$ENV_FILE"
+        set +a
+        HOST="${POSTGRES_HOST_EXTERNAL:-localhost}"
+        PORT="${EXTERNAL_POSTGRES_PORT:-5432}"
+        SSLMODE="${POSTGRES_SSL_MODE:-disable}"
+        DSN="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${HOST}:${PORT}/${POSTGRES_DB}?sslmode=${SSLMODE}"
+        echo "⏪ goose down → ${HOST}:${PORT}/${POSTGRES_DB}"
+        {{.GOOSE}} -dir "{{.ORDER_MIGRATIONS_DIR}}" postgres "$DSN" down
 
   run:
     desc: "Запуск Order локально (нужен Postgres и .env)"

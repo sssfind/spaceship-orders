@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
@@ -101,6 +103,13 @@ func (a *App) initDependencies(ctx context.Context) error {
 	r.Get("/health", healthHandler.HealthCheck)
 	r.Handle("/metrics", promhttp.Handler())
 
+	if frontendDir := resolveFrontendDir(); frontendDir != "" {
+		mountFrontend(r, frontendDir)
+		logger.Info(ctx, fmt.Sprintf("frontend mounted from %s", frontendDir))
+	} else {
+		logger.Info(ctx, "frontend directory not found, UI is disabled")
+	}
+
 	r.Mount("/", orderServer)
 
 	a.httpServer = &http.Server{
@@ -114,6 +123,38 @@ func (a *App) initDependencies(ctx context.Context) error {
 	})
 
 	return nil
+}
+
+func resolveFrontendDir() string {
+	candidates := []string{"frontend", filepath.Join("..", "frontend"), "/app/frontend"}
+	if dir := os.Getenv("FRONTEND_DIR"); dir != "" {
+		candidates = append([]string{dir}, candidates...)
+	}
+
+	for _, candidate := range candidates {
+		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+			abs, err := filepath.Abs(candidate)
+			if err != nil {
+				return candidate
+			}
+			return abs
+		}
+	}
+
+	return ""
+}
+
+func mountFrontend(r chi.Router, dir string) {
+	serve := func(name string) http.HandlerFunc {
+		path := filepath.Join(dir, name)
+		return func(w http.ResponseWriter, req *http.Request) {
+			http.ServeFile(w, req, path)
+		}
+	}
+
+	r.Get("/", serve("index.html"))
+	r.Get("/styles.css", serve("styles.css"))
+	r.Get("/app.js", serve("app.js"))
 }
 
 func (a *App) Run() error {
