@@ -3,6 +3,7 @@ required:
   - order_uuid
   - user_uuid
   - part_uuids
+  - items
   - total_price
   - status
 properties:
@@ -20,13 +21,19 @@ properties:
 
   part_uuids:
     type: array
-    description: Список UUID деталей
+    description: Список UUID деталей (развёрнутый по quantity)
     items:
       type: string
       format: uuid
     example:
       - "1b2deb4d-3a7d-4bad-9bdg-2b0d7b3ycb6d"
       - "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+
+  items:
+    type: array
+    description: Позиции заказа
+    items:
+      $ref: "./order_item_dto.yaml"
 
   total_price:
     type: number
@@ -37,7 +44,7 @@ properties:
   transaction_uuid:
     type: string
     format: uuid
-    description: UUID транзакции (если оплачен)
+    description: UUID транзакции/платежа (если оплачен)
     example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
 
   payment_method:

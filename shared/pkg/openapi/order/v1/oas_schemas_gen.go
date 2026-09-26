@@ -30,25 +30,13 @@ func (*CreateOrderInternalServerError) createOrderRes() {}
 
 // Ref: #/components/schemas/create_order_request
 type CreateOrderRequest struct {
-	// Уникальный идентификатор пользователяъ.
-	UserUUID string `json:"user_uuid"`
 	// Список UUID деталей, входящих в заказ.
 	PartUuids []uuid.UUID `json:"part_uuids"`
-}
-
-// GetUserUUID returns the value of UserUUID.
-func (s *CreateOrderRequest) GetUserUUID() string {
-	return s.UserUUID
 }
 
 // GetPartUuids returns the value of PartUuids.
 func (s *CreateOrderRequest) GetPartUuids() []uuid.UUID {
 	return s.PartUuids
-}
-
-// SetUserUUID sets the value of UserUUID.
-func (s *CreateOrderRequest) SetUserUUID(val string) {
-	s.UserUUID = val
 }
 
 // SetPartUuids sets the value of PartUuids.
@@ -84,6 +72,62 @@ func (s *CreateOrderResponse) SetTotalPrice(val float64) {
 
 func (*CreateOrderResponse) createOrderRes() {}
 
+type CreatePartBadRequest GenericError
+
+func (*CreatePartBadRequest) createPartRes() {}
+
+type CreatePartInternalServerError GenericError
+
+func (*CreatePartInternalServerError) createPartRes() {}
+
+// Ref: #/components/schemas/create_part_request
+type CreatePartRequest struct {
+	Name     string    `json:"name"`
+	Price    float64   `json:"price"`
+	Category OptString `json:"category"`
+	InStock  OptInt    `json:"in_stock"`
+}
+
+// GetName returns the value of Name.
+func (s *CreatePartRequest) GetName() string {
+	return s.Name
+}
+
+// GetPrice returns the value of Price.
+func (s *CreatePartRequest) GetPrice() float64 {
+	return s.Price
+}
+
+// GetCategory returns the value of Category.
+func (s *CreatePartRequest) GetCategory() OptString {
+	return s.Category
+}
+
+// GetInStock returns the value of InStock.
+func (s *CreatePartRequest) GetInStock() OptInt {
+	return s.InStock
+}
+
+// SetName sets the value of Name.
+func (s *CreatePartRequest) SetName(val string) {
+	s.Name = val
+}
+
+// SetPrice sets the value of Price.
+func (s *CreatePartRequest) SetPrice(val float64) {
+	s.Price = val
+}
+
+// SetCategory sets the value of Category.
+func (s *CreatePartRequest) SetCategory(val OptString) {
+	s.Category = val
+}
+
+// SetInStock sets the value of InStock.
+func (s *CreatePartRequest) SetInStock(val OptInt) {
+	s.InStock = val
+}
+
 type DeleteOrderInternalServerError GenericError
 
 func (*DeleteOrderInternalServerError) deleteOrderRes() {}
@@ -96,6 +140,19 @@ func (*DeleteOrderNoContent) deleteOrderRes() {}
 type DeleteOrderNotFound GenericError
 
 func (*DeleteOrderNotFound) deleteOrderRes() {}
+
+type DeletePartInternalServerError GenericError
+
+func (*DeletePartInternalServerError) deletePartRes() {}
+
+// DeletePartNoContent is response for DeletePart operation.
+type DeletePartNoContent struct{}
+
+func (*DeletePartNoContent) deletePartRes() {}
+
+type DeletePartNotFound GenericError
+
+func (*DeletePartNotFound) deletePartRes() {}
 
 // Ref: #/components/schemas/generic_error
 type GenericError struct {
@@ -124,6 +181,23 @@ func (s *GenericError) SetMessage(val string) {
 }
 
 func (*GenericError) getOrderByUUIDRes() {}
+func (*GenericError) listPartsRes()      {}
+
+type GetPartByUUIDInternalServerError GenericError
+
+func (*GetPartByUUIDInternalServerError) getPartByUUIDRes() {}
+
+type GetPartByUUIDNotFound GenericError
+
+func (*GetPartByUUIDNotFound) getPartByUUIDRes() {}
+
+type GetPaymentByUUIDInternalServerError GenericError
+
+func (*GetPaymentByUUIDInternalServerError) getPaymentByUUIDRes() {}
+
+type GetPaymentByUUIDNotFound GenericError
+
+func (*GetPaymentByUUIDNotFound) getPaymentByUUIDRes() {}
 
 type ListOrdersBadRequest GenericError
 
@@ -136,6 +210,68 @@ func (*ListOrdersInternalServerError) listOrdersRes() {}
 type ListOrdersOKApplicationJSON []OrderDto
 
 func (*ListOrdersOKApplicationJSON) listOrdersRes() {}
+
+type ListPartsOKApplicationJSON []PartDto
+
+func (*ListPartsOKApplicationJSON) listPartsRes() {}
+
+type ListPaymentsByOrderInternalServerError GenericError
+
+func (*ListPaymentsByOrderInternalServerError) listPaymentsByOrderRes() {}
+
+type ListPaymentsByOrderNotFound GenericError
+
+func (*ListPaymentsByOrderNotFound) listPaymentsByOrderRes() {}
+
+type ListPaymentsByOrderOKApplicationJSON []PaymentDto
+
+func (*ListPaymentsByOrderOKApplicationJSON) listPaymentsByOrderRes() {}
+
+// NewOptInt returns new OptInt with value set to v.
+func NewOptInt(v int) OptInt {
+	return OptInt{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt is optional int.
+type OptInt struct {
+	Value int
+	Set   bool
+}
+
+// IsSet returns true if OptInt was set.
+func (o OptInt) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt) Reset() {
+	var v int
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt) SetTo(v int) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt) Get() (v int, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt) Or(d int) int {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
 
 // NewOptNilPaymentMethod returns new OptNilPaymentMethod with value set to v.
 func NewOptNilPaymentMethod(v PaymentMethod) OptNilPaymentMethod {
@@ -200,6 +336,52 @@ func (o OptNilPaymentMethod) Or(d PaymentMethod) PaymentMethod {
 	return d
 }
 
+// NewOptString returns new OptString with value set to v.
+func NewOptString(v string) OptString {
+	return OptString{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptString is optional string.
+type OptString struct {
+	Value string
+	Set   bool
+}
+
+// IsSet returns true if OptString was set.
+func (o OptString) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptString) Reset() {
+	var v string
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptString) SetTo(v string) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptString) Get() (v string, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptString) Or(d string) string {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptUUID returns new OptUUID with value set to v.
 func NewOptUUID(v uuid.UUID) OptUUID {
 	return OptUUID{
@@ -252,11 +434,13 @@ type OrderDto struct {
 	OrderUUID uuid.UUID `json:"order_uuid"`
 	// UUID пользователя.
 	UserUUID uuid.UUID `json:"user_uuid"`
-	// Список UUID деталей.
+	// Список UUID деталей (развёрнутый по quantity).
 	PartUuids []uuid.UUID `json:"part_uuids"`
+	// Позиции заказа.
+	Items []OrderItemDto `json:"items"`
 	// Итоговая стоимость.
 	TotalPrice float64 `json:"total_price"`
-	// UUID транзакции (если оплачен).
+	// UUID транзакции/платежа (если оплачен).
 	TransactionUUID OptUUID `json:"transaction_uuid"`
 	// Способ оплаты (присутствует, только если статус PAID).
 	PaymentMethod OptNilPaymentMethod `json:"payment_method"`
@@ -276,6 +460,11 @@ func (s *OrderDto) GetUserUUID() uuid.UUID {
 // GetPartUuids returns the value of PartUuids.
 func (s *OrderDto) GetPartUuids() []uuid.UUID {
 	return s.PartUuids
+}
+
+// GetItems returns the value of Items.
+func (s *OrderDto) GetItems() []OrderItemDto {
+	return s.Items
 }
 
 // GetTotalPrice returns the value of TotalPrice.
@@ -313,6 +502,11 @@ func (s *OrderDto) SetPartUuids(val []uuid.UUID) {
 	s.PartUuids = val
 }
 
+// SetItems sets the value of Items.
+func (s *OrderDto) SetItems(val []OrderItemDto) {
+	s.Items = val
+}
+
 // SetTotalPrice sets the value of TotalPrice.
 func (s *OrderDto) SetTotalPrice(val float64) {
 	s.TotalPrice = val
@@ -334,6 +528,43 @@ func (s *OrderDto) SetStatus(val OrderStatus) {
 }
 
 func (*OrderDto) getOrderByUUIDRes() {}
+
+// Ref: #/components/schemas/order_item_dto
+type OrderItemDto struct {
+	PartUUID  uuid.UUID `json:"part_uuid"`
+	Quantity  int       `json:"quantity"`
+	UnitPrice float64   `json:"unit_price"`
+}
+
+// GetPartUUID returns the value of PartUUID.
+func (s *OrderItemDto) GetPartUUID() uuid.UUID {
+	return s.PartUUID
+}
+
+// GetQuantity returns the value of Quantity.
+func (s *OrderItemDto) GetQuantity() int {
+	return s.Quantity
+}
+
+// GetUnitPrice returns the value of UnitPrice.
+func (s *OrderItemDto) GetUnitPrice() float64 {
+	return s.UnitPrice
+}
+
+// SetPartUUID sets the value of PartUUID.
+func (s *OrderItemDto) SetPartUUID(val uuid.UUID) {
+	s.PartUUID = val
+}
+
+// SetQuantity sets the value of Quantity.
+func (s *OrderItemDto) SetQuantity(val int) {
+	s.Quantity = val
+}
+
+// SetUnitPrice sets the value of UnitPrice.
+func (s *OrderItemDto) SetUnitPrice(val float64) {
+	s.UnitPrice = val
+}
 
 // Текущий статус жизненного цикла заказа.
 // Ref: #/components/schemas/order_status
@@ -385,6 +616,69 @@ func (s *OrderStatus) UnmarshalText(data []byte) error {
 	}
 }
 
+// Ref: #/components/schemas/part_dto
+type PartDto struct {
+	PartUUID uuid.UUID `json:"part_uuid"`
+	Name     string    `json:"name"`
+	Price    float64   `json:"price"`
+	Category string    `json:"category"`
+	InStock  int       `json:"in_stock"`
+}
+
+// GetPartUUID returns the value of PartUUID.
+func (s *PartDto) GetPartUUID() uuid.UUID {
+	return s.PartUUID
+}
+
+// GetName returns the value of Name.
+func (s *PartDto) GetName() string {
+	return s.Name
+}
+
+// GetPrice returns the value of Price.
+func (s *PartDto) GetPrice() float64 {
+	return s.Price
+}
+
+// GetCategory returns the value of Category.
+func (s *PartDto) GetCategory() string {
+	return s.Category
+}
+
+// GetInStock returns the value of InStock.
+func (s *PartDto) GetInStock() int {
+	return s.InStock
+}
+
+// SetPartUUID sets the value of PartUUID.
+func (s *PartDto) SetPartUUID(val uuid.UUID) {
+	s.PartUUID = val
+}
+
+// SetName sets the value of Name.
+func (s *PartDto) SetName(val string) {
+	s.Name = val
+}
+
+// SetPrice sets the value of Price.
+func (s *PartDto) SetPrice(val float64) {
+	s.Price = val
+}
+
+// SetCategory sets the value of Category.
+func (s *PartDto) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetInStock sets the value of InStock.
+func (s *PartDto) SetInStock(val int) {
+	s.InStock = val
+}
+
+func (*PartDto) createPartRes()    {}
+func (*PartDto) getPartByUUIDRes() {}
+func (*PartDto) updatePartRes()    {}
+
 type PayOrderBadRequest GenericError
 
 func (*PayOrderBadRequest) payOrderRes() {}
@@ -428,6 +722,67 @@ func (s *PayOrderResponse) SetTransactionUUID(val uuid.UUID) {
 }
 
 func (*PayOrderResponse) payOrderRes() {}
+
+// Ref: #/components/schemas/payment_dto
+type PaymentDto struct {
+	PaymentUUID uuid.UUID     `json:"payment_uuid"`
+	OrderUUID   uuid.UUID     `json:"order_uuid"`
+	Amount      float64       `json:"amount"`
+	Method      PaymentMethod `json:"method"`
+	Status      PaymentStatus `json:"status"`
+}
+
+// GetPaymentUUID returns the value of PaymentUUID.
+func (s *PaymentDto) GetPaymentUUID() uuid.UUID {
+	return s.PaymentUUID
+}
+
+// GetOrderUUID returns the value of OrderUUID.
+func (s *PaymentDto) GetOrderUUID() uuid.UUID {
+	return s.OrderUUID
+}
+
+// GetAmount returns the value of Amount.
+func (s *PaymentDto) GetAmount() float64 {
+	return s.Amount
+}
+
+// GetMethod returns the value of Method.
+func (s *PaymentDto) GetMethod() PaymentMethod {
+	return s.Method
+}
+
+// GetStatus returns the value of Status.
+func (s *PaymentDto) GetStatus() PaymentStatus {
+	return s.Status
+}
+
+// SetPaymentUUID sets the value of PaymentUUID.
+func (s *PaymentDto) SetPaymentUUID(val uuid.UUID) {
+	s.PaymentUUID = val
+}
+
+// SetOrderUUID sets the value of OrderUUID.
+func (s *PaymentDto) SetOrderUUID(val uuid.UUID) {
+	s.OrderUUID = val
+}
+
+// SetAmount sets the value of Amount.
+func (s *PaymentDto) SetAmount(val float64) {
+	s.Amount = val
+}
+
+// SetMethod sets the value of Method.
+func (s *PaymentDto) SetMethod(val PaymentMethod) {
+	s.Method = val
+}
+
+// SetStatus sets the value of Status.
+func (s *PaymentDto) SetStatus(val PaymentStatus) {
+	s.Status = val
+}
+
+func (*PaymentDto) getPaymentByUUIDRes() {}
 
 // Способ оплаты заказа.
 // Ref: #/components/schemas/payment_method
@@ -491,4 +846,113 @@ func (s *PaymentMethod) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// Ref: #/components/schemas/payment_status
+type PaymentStatus string
+
+const (
+	PaymentStatusPENDING   PaymentStatus = "PENDING"
+	PaymentStatusSUCCEEDED PaymentStatus = "SUCCEEDED"
+	PaymentStatusFAILED    PaymentStatus = "FAILED"
+)
+
+// AllValues returns all PaymentStatus values.
+func (PaymentStatus) AllValues() []PaymentStatus {
+	return []PaymentStatus{
+		PaymentStatusPENDING,
+		PaymentStatusSUCCEEDED,
+		PaymentStatusFAILED,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s PaymentStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case PaymentStatusPENDING:
+		return []byte(s), nil
+	case PaymentStatusSUCCEEDED:
+		return []byte(s), nil
+	case PaymentStatusFAILED:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *PaymentStatus) UnmarshalText(data []byte) error {
+	switch PaymentStatus(data) {
+	case PaymentStatusPENDING:
+		*s = PaymentStatusPENDING
+		return nil
+	case PaymentStatusSUCCEEDED:
+		*s = PaymentStatusSUCCEEDED
+		return nil
+	case PaymentStatusFAILED:
+		*s = PaymentStatusFAILED
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type UpdatePartBadRequest GenericError
+
+func (*UpdatePartBadRequest) updatePartRes() {}
+
+type UpdatePartInternalServerError GenericError
+
+func (*UpdatePartInternalServerError) updatePartRes() {}
+
+type UpdatePartNotFound GenericError
+
+func (*UpdatePartNotFound) updatePartRes() {}
+
+// Ref: #/components/schemas/update_part_request
+type UpdatePartRequest struct {
+	Name     string  `json:"name"`
+	Price    float64 `json:"price"`
+	Category string  `json:"category"`
+	InStock  int     `json:"in_stock"`
+}
+
+// GetName returns the value of Name.
+func (s *UpdatePartRequest) GetName() string {
+	return s.Name
+}
+
+// GetPrice returns the value of Price.
+func (s *UpdatePartRequest) GetPrice() float64 {
+	return s.Price
+}
+
+// GetCategory returns the value of Category.
+func (s *UpdatePartRequest) GetCategory() string {
+	return s.Category
+}
+
+// GetInStock returns the value of InStock.
+func (s *UpdatePartRequest) GetInStock() int {
+	return s.InStock
+}
+
+// SetName sets the value of Name.
+func (s *UpdatePartRequest) SetName(val string) {
+	s.Name = val
+}
+
+// SetPrice sets the value of Price.
+func (s *UpdatePartRequest) SetPrice(val float64) {
+	s.Price = val
+}
+
+// SetCategory sets the value of Category.
+func (s *UpdatePartRequest) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetInStock sets the value of InStock.
+func (s *UpdatePartRequest) SetInStock(val int) {
+	s.InStock = val
 }

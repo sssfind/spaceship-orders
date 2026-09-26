@@ -9,8 +9,11 @@ import (
 	"order/internal/config"
 	"order/internal/repository"
 	repoOrder "order/internal/repository/order"
+	repoPart "order/internal/repository/part"
+	repoPayment "order/internal/repository/payment"
 	"order/internal/service"
 	orderImpl "order/internal/service/order"
+	partImpl "order/internal/service/part"
 	"platform/pkg/closer"
 
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
@@ -19,10 +22,13 @@ import (
 type serviceProvider struct {
 	cfg *config.Config
 
-	dbPool     *pgxpool.Pool
-	orderRepo  repository.OrderRepository
-	orderSrv   service.OrderService
-	apiHandler orderV1.Handler
+	dbPool      *pgxpool.Pool
+	orderRepo   repository.OrderRepository
+	partRepo    repository.PartRepository
+	paymentRepo repository.PaymentRepository
+	orderSrv    service.OrderService
+	partSrv     service.PartService
+	apiHandler  orderV1.Handler
 }
 
 func newServiceProvider(cfg *config.Config) *serviceProvider {
@@ -56,25 +62,69 @@ func (sp *serviceProvider) OrderRepository(ctx context.Context) (repository.Orde
 	return sp.orderRepo, nil
 }
 
-func (sp *serviceProvider) OrderService(ctx context.Context) (service.OrderService, error) {
-	if sp.orderSrv == nil {
-		repo, err := sp.OrderRepository(ctx)
+func (sp *serviceProvider) PartRepository(ctx context.Context) (repository.PartRepository, error) {
+	if sp.partRepo == nil {
+		pool, err := sp.DBPool(ctx)
 		if err != nil {
 			return nil, err
 		}
+		sp.partRepo = repoPart.NewPartRepository(pool)
+	}
+	return sp.partRepo, nil
+}
 
-		sp.orderSrv = orderImpl.NewService(repo)
+func (sp *serviceProvider) PaymentRepository(ctx context.Context) (repository.PaymentRepository, error) {
+	if sp.paymentRepo == nil {
+		pool, err := sp.DBPool(ctx)
+		if err != nil {
+			return nil, err
+		}
+		sp.paymentRepo = repoPayment.NewPaymentRepository(pool)
+	}
+	return sp.paymentRepo, nil
+}
+
+func (sp *serviceProvider) OrderService(ctx context.Context) (service.OrderService, error) {
+	if sp.orderSrv == nil {
+		orderRepo, err := sp.OrderRepository(ctx)
+		if err != nil {
+			return nil, err
+		}
+		partRepo, err := sp.PartRepository(ctx)
+		if err != nil {
+			return nil, err
+		}
+		paymentRepo, err := sp.PaymentRepository(ctx)
+		if err != nil {
+			return nil, err
+		}
+		sp.orderSrv = orderImpl.NewService(orderRepo, partRepo, paymentRepo)
 	}
 	return sp.orderSrv, nil
 }
 
-func (sp *serviceProvider) APIHandler(ctx context.Context) (orderV1.Handler, error) {
-	if sp.apiHandler == nil {
-		srv, err := sp.OrderService(ctx)
+func (sp *serviceProvider) PartService(ctx context.Context) (service.PartService, error) {
+	if sp.partSrv == nil {
+		partRepo, err := sp.PartRepository(ctx)
 		if err != nil {
 			return nil, err
 		}
-		sp.apiHandler = apiV1.NewAPI(srv)
+		sp.partSrv = partImpl.NewService(partRepo)
+	}
+	return sp.partSrv, nil
+}
+
+func (sp *serviceProvider) APIHandler(ctx context.Context) (orderV1.Handler, error) {
+	if sp.apiHandler == nil {
+		orderSrv, err := sp.OrderService(ctx)
+		if err != nil {
+			return nil, err
+		}
+		partSrv, err := sp.PartService(ctx)
+		if err != nil {
+			return nil, err
+		}
+		sp.apiHandler = apiV1.NewAPI(orderSrv, partSrv)
 	}
 	return sp.apiHandler, nil
 }

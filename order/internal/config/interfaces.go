@@ -27,6 +27,10 @@ type PostgresConfig interface {
 	MigrationDir() string
 }
 
+type IAMHTTPConfig interface {
+	BaseURL() string
+}
+
 type InventoryGrpcConfig interface {
 	Address() string
 }

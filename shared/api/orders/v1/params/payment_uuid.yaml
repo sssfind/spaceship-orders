@@ -1,0 +1,7 @@
+name: payment_uuid
+in: path
+required: true
+description: UUID платежа
+schema:
+  type: string
+  format: uuid

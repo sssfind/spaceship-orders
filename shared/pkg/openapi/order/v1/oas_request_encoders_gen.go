@@ -25,8 +25,36 @@ func encodeCreateOrderRequest(
 	return nil
 }
 
+func encodeCreatePartRequest(
+	req *CreatePartRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePayOrderRequest(
 	req *PayOrderRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdatePartRequest(
+	req *UpdatePartRequest,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

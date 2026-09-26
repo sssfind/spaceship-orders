@@ -20,3 +20,11 @@ paths:
     $ref: './paths/order_pay.yaml'
   /api/v1/orders/{order_uuid}/cancel:
     $ref: './paths/order_cancel.yaml'
+  /api/v1/orders/{order_uuid}/payments:
+    $ref: './paths/order_payments.yaml'
+  /api/v1/payments/{payment_uuid}:
+    $ref: './paths/payment_by_uuid.yaml'
+  /api/v1/parts:
+    $ref: './paths/parts.yaml'
+  /api/v1/parts/{part_uuid}:
+    $ref: './paths/part_by_uuid.yaml'

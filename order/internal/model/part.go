@@ -1,9 +1,16 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Part struct {
-	UUID  uuid.UUID
-	Price float64
-	Name  string
+	UUID      uuid.UUID
+	Name      string
+	Price     float64
+	Category  string
+	InStock   int
+	CreatedAt time.Time
 }

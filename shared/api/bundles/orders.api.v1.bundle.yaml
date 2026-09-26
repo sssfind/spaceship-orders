@@ -156,8 +156,204 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/conflict_error'
+  /api/v1/orders/{order_uuid}/payments:
+    get:
+      summary: Список платежей по заказу
+      operationId: listPaymentsByOrder
+      parameters:
+        - $ref: '#/components/parameters/order_uuid'
+      responses:
+        '200':
+          description: Список платежей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/payment_dto'
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+  /api/v1/payments/{payment_uuid}:
+    get:
+      summary: Получить платёж по UUID
+      operationId: getPaymentByUUID
+      parameters:
+        - $ref: '#/components/parameters/payment_uuid'
+      responses:
+        '200':
+          description: Платёж найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/payment_dto'
+        '404':
+          description: Платёж не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+  /api/v1/parts:
+    get:
+      summary: Список деталей каталога
+      operationId: listParts
+      responses:
+        '200':
+          description: Список деталей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/part_dto'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+    post:
+      summary: Создать деталь
+      operationId: createPart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create_part_request'
+      responses:
+        '200':
+          description: Деталь создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/part_dto'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_request_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+  /api/v1/parts/{part_uuid}:
+    get:
+      summary: Получить деталь по UUID
+      operationId: getPartByUUID
+      parameters:
+        - $ref: '#/components/parameters/part_uuid'
+      responses:
+        '200':
+          description: Деталь найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/part_dto'
+        '404':
+          description: Деталь не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+    put:
+      summary: Обновить деталь
+      operationId: updatePart
+      parameters:
+        - $ref: '#/components/parameters/part_uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update_part_request'
+      responses:
+        '200':
+          description: Деталь обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/part_dto'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_request_error'
+        '404':
+          description: Деталь не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+    delete:
+      summary: Удалить деталь
+      operationId: deletePart
+      parameters:
+        - $ref: '#/components/parameters/part_uuid'
+      responses:
+        '204':
+          description: Деталь удалена
+        '404':
+          description: Деталь не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/not_found_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
 components:
   schemas:
+    order_item_dto:
+      type: object
+      required:
+        - part_uuid
+        - quantity
+        - unit_price
+      properties:
+        part_uuid:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+        unit_price:
+          type: number
+          format: double
     payment_method:
       type: string
       description: Способ оплаты заказа
@@ -182,6 +378,7 @@ components:
         - order_uuid
         - user_uuid
         - part_uuids
+        - items
         - total_price
         - status
       properties:
@@ -197,13 +394,18 @@ components:
           example: 1b2deb4d-3a7d-4bad-9bdg-2b0d7b3ycb6d
         part_uuids:
           type: array
-          description: Список UUID деталей
+          description: Список UUID деталей (развёрнутый по quantity)
           items:
             type: string
             format: uuid
           example:
             - 1b2deb4d-3a7d-4bad-9bdg-2b0d7b3ycb6d
             - 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        items:
+          type: array
+          description: Позиции заказа
+          items:
+            $ref: '#/components/schemas/order_item_dto'
         total_price:
           type: number
           format: double
@@ -212,7 +414,7 @@ components:
         transaction_uuid:
           type: string
           format: uuid
-          description: UUID транзакции (если оплачен)
+          description: UUID транзакции/платежа (если оплачен)
           example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
         payment_method:
           description: Способ оплаты (присутствует, только если статус PAID)
@@ -256,14 +458,8 @@ components:
     create_order_request:
       type: object
       required:
-        - user_uuid
         - part_uuids
       properties:
-        user_uuid:
-          type: string
-          formet: uuid
-          description: Уникальный идентификатор пользователяъ
-          example: 1b2deb4d-3a7d-4bad-9bdg-2b0d7b3ycb6d
         part_uuids:
           type: array
           description: Список UUID деталей, входящих в заказ
@@ -321,11 +517,120 @@ components:
         message:
           type: string
           example: Forbidden Error
+    payment_status:
+      type: string
+      enum:
+        - PENDING
+        - SUCCEEDED
+        - FAILED
+    payment_dto:
+      type: object
+      required:
+        - payment_uuid
+        - order_uuid
+        - amount
+        - method
+        - status
+      properties:
+        payment_uuid:
+          type: string
+          format: uuid
+        order_uuid:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+        method:
+          $ref: '#/components/schemas/payment_method'
+        status:
+          $ref: '#/components/schemas/payment_status'
+    part_dto:
+      type: object
+      required:
+        - part_uuid
+        - name
+        - price
+        - category
+        - in_stock
+      properties:
+        part_uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        category:
+          type: string
+        in_stock:
+          type: integer
+    create_part_request:
+      type: object
+      required:
+        - name
+        - price
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        price:
+          type: number
+          format: double
+          minimum: 0
+        category:
+          type: string
+          maxLength: 64
+          default: GENERAL
+        in_stock:
+          type: integer
+          minimum: 0
+          default: 0
+    update_part_request:
+      type: object
+      required:
+        - name
+        - price
+        - category
+        - in_stock
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        price:
+          type: number
+          format: double
+          minimum: 0
+        category:
+          type: string
+          maxLength: 64
+        in_stock:
+          type: integer
+          minimum: 0
   parameters:
     order_uuid:
       name: order_uuid
       in: path
       required: true
+      schema:
+        type: string
+        format: uuid
+    payment_uuid:
+      name: payment_uuid
+      in: path
+      required: true
+      description: UUID платежа
+      schema:
+        type: string
+        format: uuid
+    part_uuid:
+      name: part_uuid
+      in: path
+      required: true
+      description: UUID детали
       schema:
         type: string
         format: uuid

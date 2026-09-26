@@ -1,0 +1,10 @@
+type: object
+required:
+  - user_uuid
+  - login
+properties:
+  user_uuid:
+    type: string
+    format: uuid
+  login:
+    type: string

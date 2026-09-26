@@ -31,12 +31,30 @@ func (UnimplementedHandler) CreateOrder(ctx context.Context, req *CreateOrderReq
 	return r, ht.ErrNotImplemented
 }
 
+// CreatePart implements createPart operation.
+//
+// Создать деталь.
+//
+// POST /api/v1/parts
+func (UnimplementedHandler) CreatePart(ctx context.Context, req *CreatePartRequest) (r CreatePartRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteOrder implements deleteOrder operation.
 //
 // Удалить заказ.
 //
 // DELETE /api/v1/orders/{order_uuid}
 func (UnimplementedHandler) DeleteOrder(ctx context.Context, params DeleteOrderParams) (r DeleteOrderRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeletePart implements deletePart operation.
+//
+// Удалить деталь.
+//
+// DELETE /api/v1/parts/{part_uuid}
+func (UnimplementedHandler) DeletePart(ctx context.Context, params DeletePartParams) (r DeletePartRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -49,6 +67,24 @@ func (UnimplementedHandler) GetOrderByUUID(ctx context.Context, params GetOrderB
 	return r, ht.ErrNotImplemented
 }
 
+// GetPartByUUID implements getPartByUUID operation.
+//
+// Получить деталь по UUID.
+//
+// GET /api/v1/parts/{part_uuid}
+func (UnimplementedHandler) GetPartByUUID(ctx context.Context, params GetPartByUUIDParams) (r GetPartByUUIDRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetPaymentByUUID implements getPaymentByUUID operation.
+//
+// Получить платёж по UUID.
+//
+// GET /api/v1/payments/{payment_uuid}
+func (UnimplementedHandler) GetPaymentByUUID(ctx context.Context, params GetPaymentByUUIDParams) (r GetPaymentByUUIDRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListOrders implements listOrders operation.
 //
 // Список заказов.
@@ -58,11 +94,38 @@ func (UnimplementedHandler) ListOrders(ctx context.Context) (r ListOrdersRes, _ 
 	return r, ht.ErrNotImplemented
 }
 
+// ListParts implements listParts operation.
+//
+// Список деталей каталога.
+//
+// GET /api/v1/parts
+func (UnimplementedHandler) ListParts(ctx context.Context) (r ListPartsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListPaymentsByOrder implements listPaymentsByOrder operation.
+//
+// Список платежей по заказу.
+//
+// GET /api/v1/orders/{order_uuid}/payments
+func (UnimplementedHandler) ListPaymentsByOrder(ctx context.Context, params ListPaymentsByOrderParams) (r ListPaymentsByOrderRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PayOrder implements payOrder operation.
 //
 // Оплата заказа.
 //
 // POST /api/v1/orders/{order_uuid}/pay
 func (UnimplementedHandler) PayOrder(ctx context.Context, req *PayOrderRequest, params PayOrderParams) (r PayOrderRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdatePart implements updatePart operation.
+//
+// Обновить деталь.
+//
+// PUT /api/v1/parts/{part_uuid}
+func (UnimplementedHandler) UpdatePart(ctx context.Context, req *UpdatePartRequest, params UpdatePartParams) (r UpdatePartRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

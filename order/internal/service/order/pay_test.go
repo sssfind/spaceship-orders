@@ -3,20 +3,29 @@ package order
 import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-
 	"order/internal/model"
 )
 
 func (s *ServiceSuite) TestPayOrder_Success() {
 	orderUUID := uuid.New()
 	existing := &model.Order{
-		OrderUUID: orderUUID,
-		Status:    model.StatusPendingPayment,
+		OrderUUID:  orderUUID,
+		TotalPrice: 100,
+		Status:     model.StatusPendingPayment,
 	}
 
 	s.repo.EXPECT().
 		Get(mock.Anything, orderUUID.String()).
 		Return(existing, nil).
+		Once()
+	s.paymentRepo.EXPECT().
+		Create(mock.Anything, mock.MatchedBy(func(p *model.Payment) bool {
+			return p.OrderUUID == orderUUID &&
+				p.Amount == 100 &&
+				p.Method == model.MethodCard &&
+				p.Status == model.PaymentStatusSucceeded
+		})).
+		Return(nil).
 		Once()
 	s.repo.EXPECT().
 		UpdateStatus(mock.Anything, orderUUID.String(), model.StatusPaid, mock.AnythingOfType("string"), model.MethodCard).

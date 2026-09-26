@@ -1,0 +1,34 @@
+post:
+  summary: Регистрация пользователя
+  operationId: register
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/register_request.yaml'
+  responses:
+    '201':
+      description: Пользователь создан
+      content:
+        application/json:
+          schema:
+            $ref: '../components/user_dto.yaml'
+    '400':
+      description: Неверный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/bad_request_error.yaml'
+    '409':
+      description: Логин уже занят
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/conflict_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

@@ -1,0 +1,20 @@
+post:
+  summary: Выход (удаление сессии)
+  operationId: logout
+  parameters:
+    - $ref: '../components/parameters/session_uuid_header.yaml'
+  responses:
+    '204':
+      description: Сессия удалена
+    '401':
+      description: Нет или неверная сессия
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/unauthorized_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

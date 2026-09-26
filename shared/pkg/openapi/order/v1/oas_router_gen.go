@@ -49,56 +49,34 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/api/v1/orders"
+		case '/': // Prefix: "/api/v1/"
 
-			if l := len("/api/v1/orders"); len(elem) >= l && elem[0:l] == "/api/v1/orders" {
+			if l := len("/api/v1/"); len(elem) >= l && elem[0:l] == "/api/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch r.Method {
-				case "GET":
-					s.handleListOrdersRequest([0]string{}, elemIsEscaped, w, r)
-				case "POST":
-					s.handleCreateOrderRequest([0]string{}, elemIsEscaped, w, r)
-				default:
-					s.notAllowed(w, r, "GET,POST")
-				}
-
-				return
+				break
 			}
 			switch elem[0] {
-			case '/': // Prefix: "/"
+			case 'o': // Prefix: "orders"
 
-				if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+				if l := len("orders"); len(elem) >= l && elem[0:l] == "orders" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "order_uuid"
-				// Match until "/"
-				idx := strings.IndexByte(elem, '/')
-				if idx < 0 {
-					idx = len(elem)
-				}
-				args[0] = elem[:idx]
-				elem = elem[idx:]
-
 				if len(elem) == 0 {
 					switch r.Method {
-					case "DELETE":
-						s.handleDeleteOrderRequest([1]string{
-							args[0],
-						}, elemIsEscaped, w, r)
 					case "GET":
-						s.handleGetOrderByUUIDRequest([1]string{
-							args[0],
-						}, elemIsEscaped, w, r)
+						s.handleListOrdersRequest([0]string{}, elemIsEscaped, w, r)
+					case "POST":
+						s.handleCreateOrderRequest([0]string{}, elemIsEscaped, w, r)
 					default:
-						s.notAllowed(w, r, "DELETE,GET")
+						s.notAllowed(w, r, "GET,POST")
 					}
 
 					return
@@ -112,54 +90,220 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						break
 					}
 
+					// Param: "order_uuid"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
 					if len(elem) == 0 {
-						break
+						switch r.Method {
+						case "DELETE":
+							s.handleDeleteOrderRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						case "GET":
+							s.handleGetOrderByUUIDRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "DELETE,GET")
+						}
+
+						return
 					}
 					switch elem[0] {
-					case 'c': // Prefix: "cancel"
+					case '/': // Prefix: "/"
 
-						if l := len("cancel"); len(elem) >= l && elem[0:l] == "cancel" {
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
 						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "POST":
-								s.handleCancelOrderRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "POST")
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "cancel"
+
+							if l := len("cancel"); len(elem) >= l && elem[0:l] == "cancel" {
+								elem = elem[l:]
+							} else {
+								break
 							}
 
-							return
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "POST":
+									s.handleCancelOrderRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "POST")
+								}
+
+								return
+							}
+
+						case 'p': // Prefix: "pay"
+
+							if l := len("pay"); len(elem) >= l && elem[0:l] == "pay" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								switch r.Method {
+								case "POST":
+									s.handlePayOrderRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "POST")
+								}
+
+								return
+							}
+							switch elem[0] {
+							case 'm': // Prefix: "ments"
+
+								if l := len("ments"); len(elem) >= l && elem[0:l] == "ments" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									// Leaf node.
+									switch r.Method {
+									case "GET":
+										s.handleListPaymentsByOrderRequest([1]string{
+											args[0],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
+								}
+
+							}
+
 						}
 
-					case 'p': // Prefix: "pay"
+					}
 
-						if l := len("pay"); len(elem) >= l && elem[0:l] == "pay" {
+				}
+
+			case 'p': // Prefix: "pa"
+
+				if l := len("pa"); len(elem) >= l && elem[0:l] == "pa" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'r': // Prefix: "rts"
+
+					if l := len("rts"); len(elem) >= l && elem[0:l] == "rts" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch r.Method {
+						case "GET":
+							s.handleListPartsRequest([0]string{}, elemIsEscaped, w, r)
+						case "POST":
+							s.handleCreatePartRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET,POST")
+						}
+
+						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
+						// Param: "part_uuid"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
 						if len(elem) == 0 {
 							// Leaf node.
 							switch r.Method {
-							case "POST":
-								s.handlePayOrderRequest([1]string{
+							case "DELETE":
+								s.handleDeletePartRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							case "GET":
+								s.handleGetPartByUUIDRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							case "PUT":
+								s.handleUpdatePartRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "POST")
+								s.notAllowed(w, r, "DELETE,GET,PUT")
 							}
 
 							return
 						}
 
+					}
+
+				case 'y': // Prefix: "yments/"
+
+					if l := len("yments/"); len(elem) >= l && elem[0:l] == "yments/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "payment_uuid"
+					// Leaf parameter, slashes are prohibited
+					idx := strings.IndexByte(elem, '/')
+					if idx >= 0 {
+						break
+					}
+					args[0] = elem
+					elem = ""
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetPaymentByUUIDRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
 					}
 
 				}
@@ -246,71 +390,43 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/api/v1/orders"
+		case '/': // Prefix: "/api/v1/"
 
-			if l := len("/api/v1/orders"); len(elem) >= l && elem[0:l] == "/api/v1/orders" {
+			if l := len("/api/v1/"); len(elem) >= l && elem[0:l] == "/api/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch method {
-				case "GET":
-					r.name = ListOrdersOperation
-					r.summary = "Список заказов"
-					r.operationID = "listOrders"
-					r.pathPattern = "/api/v1/orders"
-					r.args = args
-					r.count = 0
-					return r, true
-				case "POST":
-					r.name = CreateOrderOperation
-					r.summary = "Создание заказа"
-					r.operationID = "createOrder"
-					r.pathPattern = "/api/v1/orders"
-					r.args = args
-					r.count = 0
-					return r, true
-				default:
-					return
-				}
+				break
 			}
 			switch elem[0] {
-			case '/': // Prefix: "/"
+			case 'o': // Prefix: "orders"
 
-				if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+				if l := len("orders"); len(elem) >= l && elem[0:l] == "orders" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "order_uuid"
-				// Match until "/"
-				idx := strings.IndexByte(elem, '/')
-				if idx < 0 {
-					idx = len(elem)
-				}
-				args[0] = elem[:idx]
-				elem = elem[idx:]
-
 				if len(elem) == 0 {
 					switch method {
-					case "DELETE":
-						r.name = DeleteOrderOperation
-						r.summary = "Удалить заказ"
-						r.operationID = "deleteOrder"
-						r.pathPattern = "/api/v1/orders/{order_uuid}"
-						r.args = args
-						r.count = 1
-						return r, true
 					case "GET":
-						r.name = GetOrderByUUIDOperation
-						r.summary = "Получить заказ по UUID"
-						r.operationID = "getOrderByUUID"
-						r.pathPattern = "/api/v1/orders/{order_uuid}"
+						r.name = ListOrdersOperation
+						r.summary = "Список заказов"
+						r.operationID = "listOrders"
+						r.pathPattern = "/api/v1/orders"
 						r.args = args
-						r.count = 1
+						r.count = 0
+						return r, true
+					case "POST":
+						r.name = CreateOrderOperation
+						r.summary = "Создание заказа"
+						r.operationID = "createOrder"
+						r.pathPattern = "/api/v1/orders"
+						r.args = args
+						r.count = 0
 						return r, true
 					default:
 						return
@@ -325,26 +441,213 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						break
 					}
 
+					// Param: "order_uuid"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
 					if len(elem) == 0 {
-						break
+						switch method {
+						case "DELETE":
+							r.name = DeleteOrderOperation
+							r.summary = "Удалить заказ"
+							r.operationID = "deleteOrder"
+							r.pathPattern = "/api/v1/orders/{order_uuid}"
+							r.args = args
+							r.count = 1
+							return r, true
+						case "GET":
+							r.name = GetOrderByUUIDOperation
+							r.summary = "Получить заказ по UUID"
+							r.operationID = "getOrderByUUID"
+							r.pathPattern = "/api/v1/orders/{order_uuid}"
+							r.args = args
+							r.count = 1
+							return r, true
+						default:
+							return
+						}
 					}
 					switch elem[0] {
-					case 'c': // Prefix: "cancel"
+					case '/': // Prefix: "/"
 
-						if l := len("cancel"); len(elem) >= l && elem[0:l] == "cancel" {
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
 						if len(elem) == 0 {
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "cancel"
+
+							if l := len("cancel"); len(elem) >= l && elem[0:l] == "cancel" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch method {
+								case "POST":
+									r.name = CancelOrderOperation
+									r.summary = "Отмена заказа"
+									r.operationID = "cancelOrder"
+									r.pathPattern = "/api/v1/orders/{order_uuid}/cancel"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+
+						case 'p': // Prefix: "pay"
+
+							if l := len("pay"); len(elem) >= l && elem[0:l] == "pay" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								switch method {
+								case "POST":
+									r.name = PayOrderOperation
+									r.summary = "Оплата заказа"
+									r.operationID = "payOrder"
+									r.pathPattern = "/api/v1/orders/{order_uuid}/pay"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+							switch elem[0] {
+							case 'm': // Prefix: "ments"
+
+								if l := len("ments"); len(elem) >= l && elem[0:l] == "ments" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									// Leaf node.
+									switch method {
+									case "GET":
+										r.name = ListPaymentsByOrderOperation
+										r.summary = "Список платежей по заказу"
+										r.operationID = "listPaymentsByOrder"
+										r.pathPattern = "/api/v1/orders/{order_uuid}/payments"
+										r.args = args
+										r.count = 1
+										return r, true
+									default:
+										return
+									}
+								}
+
+							}
+
+						}
+
+					}
+
+				}
+
+			case 'p': // Prefix: "pa"
+
+				if l := len("pa"); len(elem) >= l && elem[0:l] == "pa" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'r': // Prefix: "rts"
+
+					if l := len("rts"); len(elem) >= l && elem[0:l] == "rts" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							r.name = ListPartsOperation
+							r.summary = "Список деталей каталога"
+							r.operationID = "listParts"
+							r.pathPattern = "/api/v1/parts"
+							r.args = args
+							r.count = 0
+							return r, true
+						case "POST":
+							r.name = CreatePartOperation
+							r.summary = "Создать деталь"
+							r.operationID = "createPart"
+							r.pathPattern = "/api/v1/parts"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/"
+
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						// Param: "part_uuid"
+						// Leaf parameter, slashes are prohibited
+						idx := strings.IndexByte(elem, '/')
+						if idx >= 0 {
+							break
+						}
+						args[0] = elem
+						elem = ""
+
+						if len(elem) == 0 {
 							// Leaf node.
 							switch method {
-							case "POST":
-								r.name = CancelOrderOperation
-								r.summary = "Отмена заказа"
-								r.operationID = "cancelOrder"
-								r.pathPattern = "/api/v1/orders/{order_uuid}/cancel"
+							case "DELETE":
+								r.name = DeletePartOperation
+								r.summary = "Удалить деталь"
+								r.operationID = "deletePart"
+								r.pathPattern = "/api/v1/parts/{part_uuid}"
+								r.args = args
+								r.count = 1
+								return r, true
+							case "GET":
+								r.name = GetPartByUUIDOperation
+								r.summary = "Получить деталь по UUID"
+								r.operationID = "getPartByUUID"
+								r.pathPattern = "/api/v1/parts/{part_uuid}"
+								r.args = args
+								r.count = 1
+								return r, true
+							case "PUT":
+								r.name = UpdatePartOperation
+								r.summary = "Обновить деталь"
+								r.operationID = "updatePart"
+								r.pathPattern = "/api/v1/parts/{part_uuid}"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -353,30 +656,39 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							}
 						}
 
-					case 'p': // Prefix: "pay"
+					}
 
-						if l := len("pay"); len(elem) >= l && elem[0:l] == "pay" {
-							elem = elem[l:]
-						} else {
-							break
+				case 'y': // Prefix: "yments/"
+
+					if l := len("yments/"); len(elem) >= l && elem[0:l] == "yments/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "payment_uuid"
+					// Leaf parameter, slashes are prohibited
+					idx := strings.IndexByte(elem, '/')
+					if idx >= 0 {
+						break
+					}
+					args[0] = elem
+					elem = ""
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = GetPaymentByUUIDOperation
+							r.summary = "Получить платёж по UUID"
+							r.operationID = "getPaymentByUUID"
+							r.pathPattern = "/api/v1/payments/{payment_uuid}"
+							r.args = args
+							r.count = 1
+							return r, true
+						default:
+							return
 						}
-
-						if len(elem) == 0 {
-							// Leaf node.
-							switch method {
-							case "POST":
-								r.name = PayOrderOperation
-								r.summary = "Оплата заказа"
-								r.operationID = "payOrder"
-								r.pathPattern = "/api/v1/orders/{order_uuid}/pay"
-								r.args = args
-								r.count = 1
-								return r, true
-							default:
-								return
-							}
-						}
-
 					}
 
 				}

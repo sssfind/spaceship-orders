@@ -20,30 +20,72 @@ type Handler interface {
 	//
 	// POST /api/v1/orders
 	CreateOrder(ctx context.Context, req *CreateOrderRequest) (CreateOrderRes, error)
+	// CreatePart implements createPart operation.
+	//
+	// Создать деталь.
+	//
+	// POST /api/v1/parts
+	CreatePart(ctx context.Context, req *CreatePartRequest) (CreatePartRes, error)
 	// DeleteOrder implements deleteOrder operation.
 	//
 	// Удалить заказ.
 	//
 	// DELETE /api/v1/orders/{order_uuid}
 	DeleteOrder(ctx context.Context, params DeleteOrderParams) (DeleteOrderRes, error)
+	// DeletePart implements deletePart operation.
+	//
+	// Удалить деталь.
+	//
+	// DELETE /api/v1/parts/{part_uuid}
+	DeletePart(ctx context.Context, params DeletePartParams) (DeletePartRes, error)
 	// GetOrderByUUID implements getOrderByUUID operation.
 	//
 	// Получить заказ по UUID.
 	//
 	// GET /api/v1/orders/{order_uuid}
 	GetOrderByUUID(ctx context.Context, params GetOrderByUUIDParams) (GetOrderByUUIDRes, error)
+	// GetPartByUUID implements getPartByUUID operation.
+	//
+	// Получить деталь по UUID.
+	//
+	// GET /api/v1/parts/{part_uuid}
+	GetPartByUUID(ctx context.Context, params GetPartByUUIDParams) (GetPartByUUIDRes, error)
+	// GetPaymentByUUID implements getPaymentByUUID operation.
+	//
+	// Получить платёж по UUID.
+	//
+	// GET /api/v1/payments/{payment_uuid}
+	GetPaymentByUUID(ctx context.Context, params GetPaymentByUUIDParams) (GetPaymentByUUIDRes, error)
 	// ListOrders implements listOrders operation.
 	//
 	// Список заказов.
 	//
 	// GET /api/v1/orders
 	ListOrders(ctx context.Context) (ListOrdersRes, error)
+	// ListParts implements listParts operation.
+	//
+	// Список деталей каталога.
+	//
+	// GET /api/v1/parts
+	ListParts(ctx context.Context) (ListPartsRes, error)
+	// ListPaymentsByOrder implements listPaymentsByOrder operation.
+	//
+	// Список платежей по заказу.
+	//
+	// GET /api/v1/orders/{order_uuid}/payments
+	ListPaymentsByOrder(ctx context.Context, params ListPaymentsByOrderParams) (ListPaymentsByOrderRes, error)
 	// PayOrder implements payOrder operation.
 	//
 	// Оплата заказа.
 	//
 	// POST /api/v1/orders/{order_uuid}/pay
 	PayOrder(ctx context.Context, req *PayOrderRequest, params PayOrderParams) (PayOrderRes, error)
+	// UpdatePart implements updatePart operation.
+	//
+	// Обновить деталь.
+	//
+	// PUT /api/v1/parts/{part_uuid}
+	UpdatePart(ctx context.Context, req *UpdatePartRequest, params UpdatePartParams) (UpdatePartRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

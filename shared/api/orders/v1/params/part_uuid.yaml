@@ -1,0 +1,7 @@
+name: part_uuid
+in: path
+required: true
+description: UUID детали
+schema:
+  type: string
+  format: uuid

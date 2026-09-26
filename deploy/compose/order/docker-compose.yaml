@@ -36,6 +36,7 @@ services:
     depends_on:
       orders_db:
         condition: service_healthy
+    # IAM must be on the same network (task up-iam / spaceship_network)
 
 volumes:
   orders_pg_data:

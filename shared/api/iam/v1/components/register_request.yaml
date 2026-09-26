@@ -1,0 +1,18 @@
+type: object
+required:
+  - login
+  - password
+properties:
+  login:
+    type: string
+    minLength: 3
+    maxLength: 64
+    description: Логин пользователя
+    example: pilot
+  password:
+    type: string
+    minLength: 6
+    maxLength: 128
+    format: password
+    description: Пароль
+    example: secret123

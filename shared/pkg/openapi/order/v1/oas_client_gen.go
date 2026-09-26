@@ -40,30 +40,72 @@ type Invoker interface {
 	//
 	// POST /api/v1/orders
 	CreateOrder(ctx context.Context, request *CreateOrderRequest) (CreateOrderRes, error)
+	// CreatePart invokes createPart operation.
+	//
+	// Создать деталь.
+	//
+	// POST /api/v1/parts
+	CreatePart(ctx context.Context, request *CreatePartRequest) (CreatePartRes, error)
 	// DeleteOrder invokes deleteOrder operation.
 	//
 	// Удалить заказ.
 	//
 	// DELETE /api/v1/orders/{order_uuid}
 	DeleteOrder(ctx context.Context, params DeleteOrderParams) (DeleteOrderRes, error)
+	// DeletePart invokes deletePart operation.
+	//
+	// Удалить деталь.
+	//
+	// DELETE /api/v1/parts/{part_uuid}
+	DeletePart(ctx context.Context, params DeletePartParams) (DeletePartRes, error)
 	// GetOrderByUUID invokes getOrderByUUID operation.
 	//
 	// Получить заказ по UUID.
 	//
 	// GET /api/v1/orders/{order_uuid}
 	GetOrderByUUID(ctx context.Context, params GetOrderByUUIDParams) (GetOrderByUUIDRes, error)
+	// GetPartByUUID invokes getPartByUUID operation.
+	//
+	// Получить деталь по UUID.
+	//
+	// GET /api/v1/parts/{part_uuid}
+	GetPartByUUID(ctx context.Context, params GetPartByUUIDParams) (GetPartByUUIDRes, error)
+	// GetPaymentByUUID invokes getPaymentByUUID operation.
+	//
+	// Получить платёж по UUID.
+	//
+	// GET /api/v1/payments/{payment_uuid}
+	GetPaymentByUUID(ctx context.Context, params GetPaymentByUUIDParams) (GetPaymentByUUIDRes, error)
 	// ListOrders invokes listOrders operation.
 	//
 	// Список заказов.
 	//
 	// GET /api/v1/orders
 	ListOrders(ctx context.Context) (ListOrdersRes, error)
+	// ListParts invokes listParts operation.
+	//
+	// Список деталей каталога.
+	//
+	// GET /api/v1/parts
+	ListParts(ctx context.Context) (ListPartsRes, error)
+	// ListPaymentsByOrder invokes listPaymentsByOrder operation.
+	//
+	// Список платежей по заказу.
+	//
+	// GET /api/v1/orders/{order_uuid}/payments
+	ListPaymentsByOrder(ctx context.Context, params ListPaymentsByOrderParams) (ListPaymentsByOrderRes, error)
 	// PayOrder invokes payOrder operation.
 	//
 	// Оплата заказа.
 	//
 	// POST /api/v1/orders/{order_uuid}/pay
 	PayOrder(ctx context.Context, request *PayOrderRequest, params PayOrderParams) (PayOrderRes, error)
+	// UpdatePart invokes updatePart operation.
+	//
+	// Обновить деталь.
+	//
+	// PUT /api/v1/parts/{part_uuid}
+	UpdatePart(ctx context.Context, request *UpdatePartRequest, params UpdatePartParams) (UpdatePartRes, error)
 }
 
 // Client implements OAS client.
@@ -275,6 +317,81 @@ func (c *Client) sendCreateOrder(ctx context.Context, request *CreateOrderReques
 	return result, nil
 }
 
+// CreatePart invokes createPart operation.
+//
+// Создать деталь.
+//
+// POST /api/v1/parts
+func (c *Client) CreatePart(ctx context.Context, request *CreatePartRequest) (CreatePartRes, error) {
+	res, err := c.sendCreatePart(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendCreatePart(ctx context.Context, request *CreatePartRequest) (res CreatePartRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("createPart"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v1/parts"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CreatePartOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/parts"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCreatePartRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeCreatePartResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // DeleteOrder invokes deleteOrder operation.
 //
 // Удалить заказ.
@@ -358,6 +475,96 @@ func (c *Client) sendDeleteOrder(ctx context.Context, params DeleteOrderParams) 
 
 	stage = "DecodeResponse"
 	result, err := decodeDeleteOrderResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DeletePart invokes deletePart operation.
+//
+// Удалить деталь.
+//
+// DELETE /api/v1/parts/{part_uuid}
+func (c *Client) DeletePart(ctx context.Context, params DeletePartParams) (DeletePartRes, error) {
+	res, err := c.sendDeletePart(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeletePart(ctx context.Context, params DeletePartParams) (res DeletePartRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deletePart"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.HTTPRouteKey.String("/api/v1/parts/{part_uuid}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, DeletePartOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/parts/"
+	{
+		// Encode "part_uuid" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "part_uuid",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.PartUUID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeDeletePartResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -455,6 +662,186 @@ func (c *Client) sendGetOrderByUUID(ctx context.Context, params GetOrderByUUIDPa
 	return result, nil
 }
 
+// GetPartByUUID invokes getPartByUUID operation.
+//
+// Получить деталь по UUID.
+//
+// GET /api/v1/parts/{part_uuid}
+func (c *Client) GetPartByUUID(ctx context.Context, params GetPartByUUIDParams) (GetPartByUUIDRes, error) {
+	res, err := c.sendGetPartByUUID(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetPartByUUID(ctx context.Context, params GetPartByUUIDParams) (res GetPartByUUIDRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getPartByUUID"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/parts/{part_uuid}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetPartByUUIDOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/parts/"
+	{
+		// Encode "part_uuid" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "part_uuid",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.PartUUID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetPartByUUIDResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetPaymentByUUID invokes getPaymentByUUID operation.
+//
+// Получить платёж по UUID.
+//
+// GET /api/v1/payments/{payment_uuid}
+func (c *Client) GetPaymentByUUID(ctx context.Context, params GetPaymentByUUIDParams) (GetPaymentByUUIDRes, error) {
+	res, err := c.sendGetPaymentByUUID(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetPaymentByUUID(ctx context.Context, params GetPaymentByUUIDParams) (res GetPaymentByUUIDRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getPaymentByUUID"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/payments/{payment_uuid}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetPaymentByUUIDOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/payments/"
+	{
+		// Encode "payment_uuid" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "payment_uuid",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.PaymentUUID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetPaymentByUUIDResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ListOrders invokes listOrders operation.
 //
 // Список заказов.
@@ -520,6 +907,169 @@ func (c *Client) sendListOrders(ctx context.Context) (res ListOrdersRes, err err
 
 	stage = "DecodeResponse"
 	result, err := decodeListOrdersResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ListParts invokes listParts operation.
+//
+// Список деталей каталога.
+//
+// GET /api/v1/parts
+func (c *Client) ListParts(ctx context.Context) (ListPartsRes, error) {
+	res, err := c.sendListParts(ctx)
+	return res, err
+}
+
+func (c *Client) sendListParts(ctx context.Context) (res ListPartsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listParts"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/parts"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListPartsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/parts"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeListPartsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ListPaymentsByOrder invokes listPaymentsByOrder operation.
+//
+// Список платежей по заказу.
+//
+// GET /api/v1/orders/{order_uuid}/payments
+func (c *Client) ListPaymentsByOrder(ctx context.Context, params ListPaymentsByOrderParams) (ListPaymentsByOrderRes, error) {
+	res, err := c.sendListPaymentsByOrder(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendListPaymentsByOrder(ctx context.Context, params ListPaymentsByOrderParams) (res ListPaymentsByOrderRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listPaymentsByOrder"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/orders/{order_uuid}/payments"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListPaymentsByOrderOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/orders/"
+	{
+		// Encode "order_uuid" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "order_uuid",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.OrderUUID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/payments"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeListPaymentsByOrderResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -614,6 +1164,99 @@ func (c *Client) sendPayOrder(ctx context.Context, request *PayOrderRequest, par
 
 	stage = "DecodeResponse"
 	result, err := decodePayOrderResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// UpdatePart invokes updatePart operation.
+//
+// Обновить деталь.
+//
+// PUT /api/v1/parts/{part_uuid}
+func (c *Client) UpdatePart(ctx context.Context, request *UpdatePartRequest, params UpdatePartParams) (UpdatePartRes, error) {
+	res, err := c.sendUpdatePart(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendUpdatePart(ctx context.Context, request *UpdatePartRequest, params UpdatePartParams) (res UpdatePartRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("updatePart"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.HTTPRouteKey.String("/api/v1/parts/{part_uuid}"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, UpdatePartOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/parts/"
+	{
+		// Encode "part_uuid" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "part_uuid",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.UUIDToString(params.PartUUID))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeUpdatePartRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeUpdatePartResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

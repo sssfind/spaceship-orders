@@ -1,0 +1,7 @@
+name: X-Session-Uuid
+in: header
+required: true
+schema:
+  type: string
+  format: uuid
+description: UUID активной сессии

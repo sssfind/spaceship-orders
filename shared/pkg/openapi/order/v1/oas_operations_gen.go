@@ -6,10 +6,17 @@ package order
 type OperationName = string
 
 const (
-	CancelOrderOperation    OperationName = "CancelOrder"
-	CreateOrderOperation    OperationName = "CreateOrder"
-	DeleteOrderOperation    OperationName = "DeleteOrder"
-	GetOrderByUUIDOperation OperationName = "GetOrderByUUID"
-	ListOrdersOperation     OperationName = "ListOrders"
-	PayOrderOperation       OperationName = "PayOrder"
+	CancelOrderOperation         OperationName = "CancelOrder"
+	CreateOrderOperation         OperationName = "CreateOrder"
+	CreatePartOperation          OperationName = "CreatePart"
+	DeleteOrderOperation         OperationName = "DeleteOrder"
+	DeletePartOperation          OperationName = "DeletePart"
+	GetOrderByUUIDOperation      OperationName = "GetOrderByUUID"
+	GetPartByUUIDOperation       OperationName = "GetPartByUUID"
+	GetPaymentByUUIDOperation    OperationName = "GetPaymentByUUID"
+	ListOrdersOperation          OperationName = "ListOrders"
+	ListPartsOperation           OperationName = "ListParts"
+	ListPaymentsByOrderOperation OperationName = "ListPaymentsByOrder"
+	PayOrderOperation            OperationName = "PayOrder"
+	UpdatePartOperation          OperationName = "UpdatePart"
 )

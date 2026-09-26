@@ -19,6 +19,7 @@ type Order struct {
 	OrderUUID       uuid.UUID
 	UserUUID        uuid.UUID
 	PartUUIDs       []uuid.UUID
+	Items           []OrderItem
 	TotalPrice      float64
 	Status          OrderStatus
 	TransactionUUID *uuid.UUID

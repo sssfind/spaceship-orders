@@ -9,18 +9,46 @@ type CreateOrderRes interface {
 	createOrderRes()
 }
 
+type CreatePartRes interface {
+	createPartRes()
+}
+
 type DeleteOrderRes interface {
 	deleteOrderRes()
+}
+
+type DeletePartRes interface {
+	deletePartRes()
 }
 
 type GetOrderByUUIDRes interface {
 	getOrderByUUIDRes()
 }
 
+type GetPartByUUIDRes interface {
+	getPartByUUIDRes()
+}
+
+type GetPaymentByUUIDRes interface {
+	getPaymentByUUIDRes()
+}
+
 type ListOrdersRes interface {
 	listOrdersRes()
 }
 
+type ListPartsRes interface {
+	listPartsRes()
+}
+
+type ListPaymentsByOrderRes interface {
+	listPaymentsByOrderRes()
+}
+
 type PayOrderRes interface {
 	payOrderRes()
+}
+
+type UpdatePartRes interface {
+	updatePartRes()
 }

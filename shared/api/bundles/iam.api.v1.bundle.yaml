@@ -1,0 +1,251 @@
+openapi: 3.0.3
+info:
+  title: IAM Service API
+  version: 1.0.0
+  description: API регистрации и аутентификации пользователей
+servers:
+  - url: http://localhost:8082
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Регистрация пользователя
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/register_request'
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_dto'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_request_error'
+        '409':
+          description: Логин уже занят
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/conflict_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+  /api/v1/auth/login:
+    post:
+      summary: Вход пользователя
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login_request'
+      responses:
+        '200':
+          description: Сессия создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/login_response'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bad_request_error'
+        '401':
+          description: Неверные учётные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+  /api/v1/auth/logout:
+    post:
+      summary: Выход (удаление сессии)
+      operationId: logout
+      parameters:
+        - $ref: '#/components/parameters/session_uuid_header'
+      responses:
+        '204':
+          description: Сессия удалена
+        '401':
+          description: Нет или неверная сессия
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+  /api/v1/auth/whoami:
+    get:
+      summary: Текущий пользователь по сессии
+      operationId: whoami
+      parameters:
+        - $ref: '#/components/parameters/session_uuid_header'
+      responses:
+        '200':
+          description: Пользователь сессии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_dto'
+        '401':
+          description: Нет или неверная сессия
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/unauthorized_error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_server_error'
+components:
+  schemas:
+    register_request:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+          minLength: 3
+          maxLength: 64
+          description: Логин пользователя
+          example: pilot
+        password:
+          type: string
+          minLength: 6
+          maxLength: 128
+          format: password
+          description: Пароль
+          example: secret123
+    user_dto:
+      type: object
+      required:
+        - user_uuid
+        - login
+      properties:
+        user_uuid:
+          type: string
+          format: uuid
+        login:
+          type: string
+    generic_error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    bad_request_error:
+      allOf:
+        - $ref: '#/components/schemas/generic_error'
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Bad Request
+    conflict_error:
+      allOf:
+        - $ref: '#/components/schemas/generic_error'
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 409
+        message:
+          type: string
+          example: Conflict
+    internal_server_error:
+      allOf:
+        - $ref: '#/components/schemas/generic_error'
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 500
+        message:
+          type: string
+          example: Internal Server Error
+    login_request:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: pilot
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+          format: password
+          example: secret123
+    login_response:
+      type: object
+      required:
+        - session_uuid
+        - user
+      properties:
+        session_uuid:
+          type: string
+          format: uuid
+          description: UUID сессии для заголовка X-Session-Uuid
+        user:
+          $ref: '#/components/schemas/user_dto'
+    unauthorized_error:
+      allOf:
+        - $ref: '#/components/schemas/generic_error'
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 401
+        message:
+          type: string
+          example: Unauthorized
+  parameters:
+    session_uuid_header:
+      name: X-Session-Uuid
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: UUID активной сессии
+x-ogen:
+  package: iam
+  target: ./shared/pkg/openapi/iam/v1

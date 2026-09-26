@@ -1,0 +1,24 @@
+get:
+  summary: Получить платёж по UUID
+  operationId: getPaymentByUUID
+  parameters:
+    - $ref: '../params/payment_uuid.yaml'
+  responses:
+    '200':
+      description: Платёж найден
+      content:
+        application/json:
+          schema:
+            $ref: '../components/payment_dto.yaml'
+    '404':
+      description: Платёж не найден
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/not_found_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

@@ -3,7 +3,6 @@ package order
 import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-
 	"order/internal/model"
 )
 

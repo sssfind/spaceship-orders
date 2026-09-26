@@ -1,0 +1,47 @@
+get:
+  summary: Список деталей каталога
+  operationId: listParts
+  responses:
+    '200':
+      description: Список деталей
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../components/part_dto.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'
+
+post:
+  summary: Создать деталь
+  operationId: createPart
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/create_part_request.yaml'
+  responses:
+    '200':
+      description: Деталь создана
+      content:
+        application/json:
+          schema:
+            $ref: '../components/part_dto.yaml'
+    '400':
+      description: Неверный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/bad_request_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

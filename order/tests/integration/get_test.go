@@ -4,7 +4,6 @@ package integration
 
 import (
 	"github.com/google/uuid"
-
 	"order/internal/model"
 )
 

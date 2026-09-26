@@ -1,0 +1,26 @@
+get:
+  summary: Список платежей по заказу
+  operationId: listPaymentsByOrder
+  parameters:
+    - $ref: '../params/order_uuid.yaml'
+  responses:
+    '200':
+      description: Список платежей
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../components/payment_dto.yaml'
+    '404':
+      description: Заказ не найден
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/not_found_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

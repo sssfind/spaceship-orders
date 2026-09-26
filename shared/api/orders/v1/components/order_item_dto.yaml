@@ -1,0 +1,15 @@
+type: object
+required:
+  - part_uuid
+  - quantity
+  - unit_price
+properties:
+  part_uuid:
+    type: string
+    format: uuid
+  quantity:
+    type: integer
+    minimum: 1
+  unit_price:
+    type: number
+    format: double

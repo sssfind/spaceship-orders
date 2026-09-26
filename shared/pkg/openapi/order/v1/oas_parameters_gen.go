@@ -146,6 +146,72 @@ func decodeDeleteOrderParams(args [1]string, argsEscaped bool, r *http.Request) 
 	return params, nil
 }
 
+// DeletePartParams is parameters of deletePart operation.
+type DeletePartParams struct {
+	// UUID детали.
+	PartUUID uuid.UUID
+}
+
+func unpackDeletePartParams(packed middleware.Parameters) (params DeletePartParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "part_uuid",
+			In:   "path",
+		}
+		params.PartUUID = packed[key].(uuid.UUID)
+	}
+	return params
+}
+
+func decodeDeletePartParams(args [1]string, argsEscaped bool, r *http.Request) (params DeletePartParams, _ error) {
+	// Decode path: part_uuid.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "part_uuid",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.PartUUID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "part_uuid",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetOrderByUUIDParams is parameters of getOrderByUUID operation.
 type GetOrderByUUIDParams struct {
 	OrderUUID uuid.UUID
@@ -163,6 +229,203 @@ func unpackGetOrderByUUIDParams(packed middleware.Parameters) (params GetOrderBy
 }
 
 func decodeGetOrderByUUIDParams(args [1]string, argsEscaped bool, r *http.Request) (params GetOrderByUUIDParams, _ error) {
+	// Decode path: order_uuid.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "order_uuid",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.OrderUUID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "order_uuid",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetPartByUUIDParams is parameters of getPartByUUID operation.
+type GetPartByUUIDParams struct {
+	// UUID детали.
+	PartUUID uuid.UUID
+}
+
+func unpackGetPartByUUIDParams(packed middleware.Parameters) (params GetPartByUUIDParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "part_uuid",
+			In:   "path",
+		}
+		params.PartUUID = packed[key].(uuid.UUID)
+	}
+	return params
+}
+
+func decodeGetPartByUUIDParams(args [1]string, argsEscaped bool, r *http.Request) (params GetPartByUUIDParams, _ error) {
+	// Decode path: part_uuid.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "part_uuid",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.PartUUID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "part_uuid",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetPaymentByUUIDParams is parameters of getPaymentByUUID operation.
+type GetPaymentByUUIDParams struct {
+	// UUID платежа.
+	PaymentUUID uuid.UUID
+}
+
+func unpackGetPaymentByUUIDParams(packed middleware.Parameters) (params GetPaymentByUUIDParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "payment_uuid",
+			In:   "path",
+		}
+		params.PaymentUUID = packed[key].(uuid.UUID)
+	}
+	return params
+}
+
+func decodeGetPaymentByUUIDParams(args [1]string, argsEscaped bool, r *http.Request) (params GetPaymentByUUIDParams, _ error) {
+	// Decode path: payment_uuid.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "payment_uuid",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.PaymentUUID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "payment_uuid",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ListPaymentsByOrderParams is parameters of listPaymentsByOrder operation.
+type ListPaymentsByOrderParams struct {
+	OrderUUID uuid.UUID
+}
+
+func unpackListPaymentsByOrderParams(packed middleware.Parameters) (params ListPaymentsByOrderParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "order_uuid",
+			In:   "path",
+		}
+		params.OrderUUID = packed[key].(uuid.UUID)
+	}
+	return params
+}
+
+func decodeListPaymentsByOrderParams(args [1]string, argsEscaped bool, r *http.Request) (params ListPaymentsByOrderParams, _ error) {
 	// Decode path: order_uuid.
 	if err := func() error {
 		param := args[0]
@@ -269,6 +532,72 @@ func decodePayOrderParams(args [1]string, argsEscaped bool, r *http.Request) (pa
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "order_uuid",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// UpdatePartParams is parameters of updatePart operation.
+type UpdatePartParams struct {
+	// UUID детали.
+	PartUUID uuid.UUID
+}
+
+func unpackUpdatePartParams(packed middleware.Parameters) (params UpdatePartParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "part_uuid",
+			In:   "path",
+		}
+		params.PartUUID = packed[key].(uuid.UUID)
+	}
+	return params
+}
+
+func decodeUpdatePartParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdatePartParams, _ error) {
+	// Decode path: part_uuid.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "part_uuid",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.PartUUID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "part_uuid",
 			In:   "path",
 			Err:  err,
 		}

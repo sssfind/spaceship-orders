@@ -1,13 +1,7 @@
 type: object
 required:
-  - user_uuid
   - part_uuids
 properties:
-  user_uuid:
-    type: string
-    formet: uuid
-    description: Уникальный идентификатор пользователяъ
-    example: "1b2deb4d-3a7d-4bad-9bdg-2b0d7b3ycb6d"
   part_uuids:
     type: array
     description: Список UUID деталей, входящих в заказ

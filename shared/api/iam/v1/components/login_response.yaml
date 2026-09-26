@@ -1,0 +1,11 @@
+type: object
+required:
+  - session_uuid
+  - user
+properties:
+  session_uuid:
+    type: string
+    format: uuid
+    description: UUID сессии для заголовка X-Session-Uuid
+  user:
+    $ref: './user_dto.yaml'

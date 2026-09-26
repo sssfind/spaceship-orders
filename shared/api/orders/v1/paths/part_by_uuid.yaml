@@ -1,0 +1,82 @@
+get:
+  summary: Получить деталь по UUID
+  operationId: getPartByUUID
+  parameters:
+    - $ref: '../params/part_uuid.yaml'
+  responses:
+    '200':
+      description: Деталь найдена
+      content:
+        application/json:
+          schema:
+            $ref: '../components/part_dto.yaml'
+    '404':
+      description: Деталь не найдена
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/not_found_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'
+
+put:
+  summary: Обновить деталь
+  operationId: updatePart
+  parameters:
+    - $ref: '../params/part_uuid.yaml'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/update_part_request.yaml'
+  responses:
+    '200':
+      description: Деталь обновлена
+      content:
+        application/json:
+          schema:
+            $ref: '../components/part_dto.yaml'
+    '400':
+      description: Неверный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/bad_request_error.yaml'
+    '404':
+      description: Деталь не найдена
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/not_found_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'
+
+delete:
+  summary: Удалить деталь
+  operationId: deletePart
+  parameters:
+    - $ref: '../params/part_uuid.yaml'
+  responses:
+    '204':
+      description: Деталь удалена
+    '404':
+      description: Деталь не найдена
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/not_found_error.yaml'
+    '500':
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../components/errors/internal_server_error.yaml'

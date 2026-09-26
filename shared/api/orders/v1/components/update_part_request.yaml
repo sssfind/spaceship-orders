@@ -1,0 +1,21 @@
+type: object
+required:
+  - name
+  - price
+  - category
+  - in_stock
+properties:
+  name:
+    type: string
+    minLength: 1
+    maxLength: 128
+  price:
+    type: number
+    format: double
+    minimum: 0
+  category:
+    type: string
+    maxLength: 64
+  in_stock:
+    type: integer
+    minimum: 0

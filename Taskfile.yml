@@ -29,13 +29,17 @@ vars:
 
   OPEN_API_ORDER_V1_BASE: '{{.ROOT_DIR}}/shared/api/orders/v1/orders.openapi.yaml'
   OPEN_API_ORDER_V1_BUNDLE: '{{.ROOT_DIR}}/shared/api/bundles/orders.api.v1.bundle.yaml'
+  OPEN_API_IAM_V1_BASE: '{{.ROOT_DIR}}/shared/api/iam/v1/iam.openapi.yaml'
+  OPEN_API_IAM_V1_BUNDLE: '{{.ROOT_DIR}}/shared/api/bundles/iam.api.v1.bundle.yaml'
   OPEN_API_FILES: '{{.ROOT_DIR}}/shared/api/bundles'
   COVERAGE_DIR: '{{.ROOT_DIR}}/coverage'
   COVERAGE_FILE: total.out
   ORDER_MIGRATIONS_DIR: '{{.ROOT_DIR}}/order/migrations'
+  IAM_MIGRATIONS_DIR: '{{.ROOT_DIR}}/iam/migrations'
+  COMPOSE_IAM_ENV: '{{.ROOT_DIR}}/deploy/compose/iam/.env'
 
-  MODULES: order shared platform
-  SERVICES: order
+  MODULES: order iam shared platform
+  SERVICES: order,iam
 
 tasks:
   install-formatters:
@@ -110,6 +114,12 @@ tasks:
     cmds:
       - '{{.REDOCLY}} bundle {{.OPEN_API_ORDER_V1_BASE}} -o {{.OPEN_API_ORDER_V1_BUNDLE}}'
 
+  redocly-cli:iam-v1-bundle:
+    desc: "Собрать OpenAPI IAM v1 в bundle"
+    deps: [ redocly-cli:install ]
+    cmds:
+      - '{{.REDOCLY}} bundle {{.OPEN_API_IAM_V1_BASE}} -o {{.OPEN_API_IAM_V1_BUNDLE}}'
+
   ogen:install:
     desc: "Установить ogen в ./bin"
     cmds:
@@ -128,10 +138,11 @@ tasks:
         }
 
   ogen:gen:
-    desc: "Генерация HTTP-сервера Order из OpenAPI (ogen)"
+    desc: "Генерация HTTP-серверов Order/IAM из OpenAPI (ogen)"
     deps: [ ogen:install, yq:install ]
     cmds:
       - task: redocly-cli:order-v1-bundle
+      - task: redocly-cli:iam-v1-bundle
       - |
         find {{.OPEN_API_FILES}} -name '*.yaml' -o -name '*.yml' | while read -r file; do
           if [ -f "$file" ] && grep -q 'x-ogen:' "$file"; then
@@ -143,12 +154,12 @@ tasks:
         done
 
   gen:
-    desc: "Перегенерировать Go-код из OpenAPI Order API"
+    desc: "Перегенерировать Go-код из OpenAPI (Order + IAM)"
     cmds:
       - task: ogen:gen
 
   deps:update:
-    desc: "go mod tidy в order, shared, platform"
+    desc: "go mod tidy в order, iam, shared, platform"
     cmds:
       - |
         for mod in {{.MODULES}}; do
@@ -224,15 +235,31 @@ tasks:
     cmds:
       - docker compose down --volumes
 
-  up:
-    desc: "Алиас up-order"
+  up-iam:
+    desc: "Docker Compose: Postgres + IAM"
+    dir: deploy/compose/iam
     cmds:
+      - docker compose up --build --detach
+
+  down-iam:
+    desc: "Остановить IAM compose"
+    dir: deploy/compose/iam
+    cmds:
+      - docker compose down --volumes
+
+  up:
+    desc: "Поднять IAM + Order (общая сеть spaceship_network)"
+    cmds:
+      - docker network inspect spaceship_network >/dev/null 2>&1 || docker network create spaceship_network
+      - task: env:generate
+      - task: up-iam
       - task: up-order
 
   down:
-    desc: "Алиас down-order"
+    desc: "Остановить Order + IAM"
     cmds:
       - task: down-order
+      - task: down-iam
 
   env:install-envsubst:
     desc: "Установить envsubst в ./bin"
@@ -243,7 +270,7 @@ tasks:
         }
 
   env:generate:
-    desc: "Сгенерировать deploy/env для Order из шаблонов"
+    desc: "Сгенерировать deploy/compose/*/ .env для Order и IAM"
     deps: [ env:install-envsubst ]
     cmds:
       - |
@@ -251,6 +278,11 @@ tasks:
         TEMPLATE_FILE="{{.ENVDIR}}/.env.template"
         SCRIPT="{{.ENVDIR}}/generate-env.sh"
         if [ ! -f "$ENV_FILE" ] && [ -f "$TEMPLATE_FILE" ]; then
+          cp "$TEMPLATE_FILE" "$ENV_FILE"
+        fi
+        # Обновляем .env мастер-файл из шаблона, если в нём ещё старые IAM_GRPC/REDIS ключи
+        if [ -f "$ENV_FILE" ] && grep -q 'IAM_GRPC_HOST\|IAM_REDIS_HOST' "$ENV_FILE" 2>/dev/null; then
+          echo "♻️  Обновляем {{.ENVDIR}}/.env из .env.template (HTTP IAM без Redis)"
           cp "$TEMPLATE_FILE" "$ENV_FILE"
         fi
         chmod +x "$SCRIPT"
@@ -326,8 +358,15 @@ tasks:
         {{.GOOSE}} -dir "{{.ORDER_MIGRATIONS_DIR}}" postgres "$DSN" down
 
   run:
-    desc: "Запуск Order локально (нужен Postgres и .env)"
+    desc: "Запуск Order локально (нужен Postgres, IAM и .env)"
     deps: [env:generate]
     dir: order
+    cmds:
+      - go run ./cmd
+
+  run-iam:
+    desc: "Запуск IAM локально (нужен Postgres и .env)"
+    deps: [env:generate]
+    dir: iam
     cmds:
       - go run ./cmd

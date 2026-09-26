@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -13,6 +15,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	healthAPI "order/internal/api/health"
+	iamclient "order/internal/client/iam"
 	"order/internal/config"
 	customMiddleware "order/internal/middleware"
 	"platform/pkg/closer"
@@ -95,6 +98,15 @@ func (a *App) initDependencies(ctx context.Context) error {
 
 	healthHandler := healthAPI.NewHandler()
 
+	iamBaseURL := a.serviceProvider.cfg.IAMHTTPConfig.BaseURL()
+	iamTarget, err := url.Parse(iamBaseURL)
+	if err != nil {
+		return fmt.Errorf("invalid IAM_HTTP_BASE_URL: %w", err)
+	}
+	iamProxy := httputil.NewSingleHostReverseProxy(iamTarget)
+	iamClient := iamclient.NewClient(iamBaseURL)
+	authMW := customMiddleware.NewAuthMiddleware(iamClient)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -110,7 +122,13 @@ func (a *App) initDependencies(ctx context.Context) error {
 		logger.Info(ctx, "frontend directory not found, UI is disabled")
 	}
 
-	r.Mount("/", orderServer)
+	// Same-origin auth for the UI: Order proxies /api/v1/auth/* to IAM.
+	r.Handle("/api/v1/auth/*", iamProxy)
+
+	r.Group(func(pr chi.Router) {
+		pr.Use(authMW.Handle)
+		pr.Mount("/", orderServer)
+	})
 
 	a.httpServer = &http.Server{
 		Addr:              a.serviceProvider.cfg.OrderHttpConfig.Address(),

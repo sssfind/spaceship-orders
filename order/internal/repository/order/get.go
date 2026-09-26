@@ -2,10 +2,10 @@ package order
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"order/internal/model"
 )
 
@@ -27,10 +27,19 @@ func (r *repo) Get(ctx context.Context, orderUUID string) (*model.Order, error) 
 		&order.PaymentMethod,
 	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, model.ErrOrderNotFound
 		}
 		return nil, fmt.Errorf("repository: get order: %w", err)
+	}
+
+	items, partUUIDs, err := r.loadItems(ctx, orderUUID)
+	if err != nil {
+		return nil, err
+	}
+	order.Items = items
+	if len(partUUIDs) > 0 {
+		order.PartUUIDs = partUUIDs
 	}
 
 	return &order, nil

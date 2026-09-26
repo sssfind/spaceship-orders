@@ -5,15 +5,20 @@ import (
 	"order/internal/service"
 )
 
-// srv объединяет в себе репозиторий
 type srv struct {
-	orderRepo repository.OrderRepository
+	orderRepo   repository.OrderRepository
+	partRepo    repository.PartRepository
+	paymentRepo repository.PaymentRepository
 }
 
 func NewService(
 	orderRepo repository.OrderRepository,
+	partRepo repository.PartRepository,
+	paymentRepo repository.PaymentRepository,
 ) service.OrderService {
 	return &srv{
-		orderRepo: orderRepo,
+		orderRepo:   orderRepo,
+		partRepo:    partRepo,
+		paymentRepo: paymentRepo,
 	}
 }

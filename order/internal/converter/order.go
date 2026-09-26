@@ -11,10 +11,20 @@ func OrderToDto(order *model.Order) *orderV1.OrderDto {
 		return nil
 	}
 
+	items := make([]orderV1.OrderItemDto, 0, len(order.Items))
+	for _, item := range order.Items {
+		items = append(items, orderV1.OrderItemDto{
+			PartUUID:  item.PartUUID,
+			Quantity:  item.Quantity,
+			UnitPrice: item.UnitPrice,
+		})
+	}
+
 	dto := &orderV1.OrderDto{
 		OrderUUID:  order.OrderUUID,
 		UserUUID:   order.UserUUID,
 		PartUuids:  order.PartUUIDs,
+		Items:      items,
 		TotalPrice: order.TotalPrice,
 		Status:     orderV1.OrderStatus(order.Status),
 	}
@@ -27,4 +37,30 @@ func OrderToDto(order *model.Order) *orderV1.OrderDto {
 	}
 
 	return dto
+}
+
+func PartToDto(part *model.Part) *orderV1.PartDto {
+	if part == nil {
+		return nil
+	}
+	return &orderV1.PartDto{
+		PartUUID: part.UUID,
+		Name:     part.Name,
+		Price:    part.Price,
+		Category: part.Category,
+		InStock:  part.InStock,
+	}
+}
+
+func PaymentToDto(payment *model.Payment) *orderV1.PaymentDto {
+	if payment == nil {
+		return nil
+	}
+	return &orderV1.PaymentDto{
+		PaymentUUID: payment.PaymentUUID,
+		OrderUUID:   payment.OrderUUID,
+		Amount:      payment.Amount,
+		Method:      orderV1.PaymentMethod(payment.Method),
+		Status:      orderV1.PaymentStatus(payment.Status),
+	}
 }

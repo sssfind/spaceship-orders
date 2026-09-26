@@ -1,0 +1,21 @@
+type: object
+required:
+  - payment_uuid
+  - order_uuid
+  - amount
+  - method
+  - status
+properties:
+  payment_uuid:
+    type: string
+    format: uuid
+  order_uuid:
+    type: string
+    format: uuid
+  amount:
+    type: number
+    format: double
+  method:
+    $ref: "./enums/payment_method.yaml"
+  status:
+    $ref: "./enums/payment_status.yaml"
