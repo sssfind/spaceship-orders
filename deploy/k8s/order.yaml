@@ -1,0 +1,110 @@
+# Order + статический UI. Единственная точка входа с хоста (NodePort).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order
+  namespace: spaceship
+  labels:
+    app.kubernetes.io/name: order
+    app.kubernetes.io/part-of: spaceship-orders
+data:
+  HTTP_HOST: "0.0.0.0"
+  HTTP_PORT: "8081"
+  HTTP_READ_TIMEOUT: "5s"
+  FRONTEND_DIR: /app/frontend
+  LOGGER_LEVEL: info
+  LOGGER_AS_JSON: "false"
+  LOG_OUTPUTS: stdout
+  SERVICE_NAME: order-service
+  # DNS Service внутри namespace spaceship, не имена контейнеров Compose.
+  POSTGRES_HOST: orders-db
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: orders
+  POSTGRES_SSL_MODE: disable
+  MIGRATION_DIRECTORY: migrations
+  IAM_HTTP_BASE_URL: http://iam:8082
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: order
+  namespace: spaceship
+  labels:
+    app.kubernetes.io/name: order
+    app.kubernetes.io/part-of: spaceship-orders
+type: Opaque
+stringData:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  namespace: spaceship
+  labels:
+    app.kubernetes.io/name: order
+    app.kubernetes.io/part-of: spaceship-orders
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: order
+        app.kubernetes.io/part-of: spaceship-orders
+    spec:
+      initContainers:
+        - name: wait-for-deps
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z orders-db 5432; do echo "waiting for orders-db"; sleep 2; done
+              until nc -z iam 8082; do echo "waiting for iam"; sleep 2; done
+      containers:
+        - name: order
+          image: order:latest
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: order
+            - secretRef:
+                name: order
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order
+  namespace: spaceship
+  labels:
+    app.kubernetes.io/name: order
+    app.kubernetes.io/part-of: spaceship-orders
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: order
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http
+      nodePort: 30081
