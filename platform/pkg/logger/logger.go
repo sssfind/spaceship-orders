@@ -124,6 +124,9 @@ func InitWithConfig(cfg Config) error {
 
 		combinedCore := zapcore.NewTee(cores...)
 		zapLogger := zap.New(combinedCore, zap.AddCaller(), zap.AddCallerSkip(2))
+		if cfg.ServiceName != "" {
+			zapLogger = zapLogger.With(zap.String("service.name", cfg.ServiceName))
+		}
 
 		globalLogger = &logger{
 			zapLogger: zapLogger,

@@ -13,10 +13,10 @@ data:
   HTTP_READ_TIMEOUT: "5s"
   FRONTEND_DIR: /app/frontend
   LOGGER_LEVEL: info
-  LOGGER_AS_JSON: "false"
-  LOG_OUTPUTS: stdout
+  LOGGER_AS_JSON: "true"
+  LOG_OUTPUTS: stdout,otlp
   SERVICE_NAME: order-service
-  # DNS Service внутри namespace spaceship, не имена контейнеров Compose.
+  OTEL_COLLECTOR_ENDPOINT: otel-collector:4317
   POSTGRES_HOST: orders-db
   POSTGRES_PORT: "5432"
   POSTGRES_DB: orders
@@ -66,6 +66,7 @@ spec:
             - |
               until nc -z orders-db 5432; do echo "waiting for orders-db"; sleep 2; done
               until nc -z iam 8082; do echo "waiting for iam"; sleep 2; done
+              until nc -z otel-collector 4317; do echo "waiting for otel-collector"; sleep 2; done
       containers:
         - name: order
           image: order:latest
