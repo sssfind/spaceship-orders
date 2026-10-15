@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"order/internal/model"
+	"platform/pkg/logger"
 	"platform/pkg/tracing"
 )
 
@@ -39,6 +41,12 @@ func (s *srv) PayOrder(ctx context.Context, orderUUID uuid.UUID, method model.Pa
 	if err := s.orderRepo.UpdateStatus(ctx, order.OrderUUID.String(), model.StatusPaid, paymentUUID.String(), method); err != nil {
 		return uuid.Nil, err
 	}
+
+	logger.Info(ctx, "order paid",
+		zap.String("order_uuid", orderUUID.String()),
+		zap.String("payment_uuid", paymentUUID.String()),
+		zap.String("payment_method", string(method)),
+	)
 
 	return paymentUUID, nil
 }

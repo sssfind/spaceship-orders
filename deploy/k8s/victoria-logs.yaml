@@ -1,4 +1,3 @@
-# Victoria Logs (single-node). Логи хранятся на PVC; снаружи — kubectl port-forward.
 # kubectl -n spaceship port-forward svc/victoria-logs 9428:9428
 # UI: http://localhost:9428/select/vmui  (также работает /vmui/)
 apiVersion: v1

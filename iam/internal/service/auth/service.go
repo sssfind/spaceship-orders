@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"iam/internal/model"
 	"iam/internal/repository"
+	"platform/pkg/logger"
 )
 
 type Service struct {
@@ -68,6 +70,11 @@ func (s *Service) Login(ctx context.Context, login, password string) (uuid.UUID,
 	if err := s.sessions.Create(ctx, session); err != nil {
 		return uuid.Nil, nil, err
 	}
+
+	logger.Info(ctx, "user logged in",
+		zap.String("login", login),
+		zap.String("user_uuid", user.UserUUID.String()),
+	)
 
 	return session.SessionUUID, user, nil
 }

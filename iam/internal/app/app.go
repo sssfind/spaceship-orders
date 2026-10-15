@@ -78,8 +78,8 @@ func (a *App) initDependencies(ctx context.Context) error {
 	healthHandler := healthAPI.NewHandler()
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(logger.HTTP)
 
 	r.Get("/health", healthHandler.HealthCheck)
 	r.Mount("/", iamServer)

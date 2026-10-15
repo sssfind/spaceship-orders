@@ -108,9 +108,8 @@ func (a *App) initDependencies(ctx context.Context) error {
 	authMW := customMiddleware.NewAuthMiddleware(iamClient)
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(customMiddleware.RequestLogger)
+	r.Use(logger.HTTP)
 
 	r.Get("/health", healthHandler.HealthCheck)
 	r.Handle("/metrics", promhttp.Handler())

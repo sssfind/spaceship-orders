@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"order/internal/metrics"
 	"order/internal/model"
+	"platform/pkg/logger"
 )
 
 func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []uuid.UUID) (*model.Order, error) {
@@ -75,6 +77,12 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 
 	metrics.OrdersTotal.Inc()
 	metrics.OrdersRevenueTotal.Add(totalPrice)
+
+	logger.Info(ctx, "order created",
+		zap.String("order_uuid", newOrder.OrderUUID.String()),
+		zap.String("user_uuid", userUUID.String()),
+		zap.Float64("total_price", totalPrice),
+	)
 
 	return newOrder, nil
 }
