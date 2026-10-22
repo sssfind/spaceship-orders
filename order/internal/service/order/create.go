@@ -12,6 +12,7 @@ import (
 
 func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []uuid.UUID) (*model.Order, error) {
 	if len(partUUIDs) == 0 {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("empty_parts").Inc()
 		return nil, model.ErrEmptyPartsList
 	}
 
@@ -26,9 +27,11 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 
 	parts, err := s.partRepo.GetByUUIDs(ctx, unique)
 	if err != nil {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("repository_error").Inc()
 		return nil, err
 	}
 	if len(parts) != len(unique) {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("part_not_found").Inc()
 		return nil, model.ErrPartNotFound
 	}
 
@@ -45,6 +48,7 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 		part := partsByUUID[id]
 		qty := qtyByPart[id]
 		if part.InStock < qty {
+			metrics.OrdersCreateFailedTotal.WithLabelValues("insufficient_stock").Inc()
 			return nil, model.ErrInsufficientStock
 		}
 		items = append(items, model.OrderItem{
@@ -72,11 +76,12 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 	}
 
 	if err := s.orderRepo.Create(ctx, newOrder); err != nil {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("repository_error").Inc()
 		return nil, err
 	}
 
-	metrics.OrdersTotal.Inc()
-	metrics.OrdersRevenueTotal.Add(totalPrice)
+	metrics.OrdersCreatedTotal.Inc()
+	metrics.OrderTotalPrice.Observe(totalPrice)
 
 	logger.Info(ctx, "order created",
 		zap.String("order_uuid", newOrder.OrderUUID.String()),

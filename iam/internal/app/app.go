@@ -9,6 +9,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 	healthAPI "iam/internal/api/health"
 	"iam/internal/config"
 	"platform/pkg/closer"
@@ -21,6 +23,7 @@ import (
 type App struct {
 	serviceProvider *serviceProvider
 	httpServer      *http.Server
+	metricsServer   *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -90,8 +93,19 @@ func (a *App) initDependencies(ctx context.Context) error {
 		ReadHeaderTimeout: a.serviceProvider.cfg.ReadTimeout(),
 	}
 
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.Handler())
+	a.metricsServer = &http.Server{
+		Addr:              a.serviceProvider.cfg.MetricsHttpConfig.Address(),
+		Handler:           metricsMux,
+		ReadHeaderTimeout: a.serviceProvider.cfg.ReadTimeout(),
+	}
+
 	closer.AddNamed("http_server", func(c context.Context) error {
 		return a.httpServer.Shutdown(c)
+	})
+	closer.AddNamed("metrics_server", func(c context.Context) error {
+		return a.metricsServer.Shutdown(c)
 	})
 
 	return nil
@@ -102,6 +116,14 @@ func (a *App) Run() error {
 	closer.SetLogger(logger.Logger())
 
 	ctx := context.Background()
+
+	go func() {
+		logger.Info(ctx, fmt.Sprintf("IAM metrics server запущен на %s", a.metricsServer.Addr))
+		if err := a.metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error(ctx, "metrics server runtime error", zap.Error(err))
+		}
+	}()
+
 	logger.Info(ctx, fmt.Sprintf("IAM HTTP Server успешно запущен на %s", a.httpServer.Addr))
 
 	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

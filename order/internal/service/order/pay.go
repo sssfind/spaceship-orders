@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"order/internal/metrics"
 	"order/internal/model"
 	"platform/pkg/logger"
 	"platform/pkg/tracing"
@@ -42,10 +43,14 @@ func (s *srv) PayOrder(ctx context.Context, orderUUID uuid.UUID, method model.Pa
 		return uuid.Nil, err
 	}
 
+	methodLabel := string(method)
+	metrics.OrdersPaidTotal.WithLabelValues(methodLabel).Inc()
+	metrics.OrdersRevenueTotal.WithLabelValues(methodLabel).Add(order.TotalPrice)
+
 	logger.Info(ctx, "order paid",
 		zap.String("order_uuid", orderUUID.String()),
 		zap.String("payment_uuid", paymentUUID.String()),
-		zap.String("payment_method", string(method)),
+		zap.String("payment_method", methodLabel),
 	)
 
 	return paymentUUID, nil

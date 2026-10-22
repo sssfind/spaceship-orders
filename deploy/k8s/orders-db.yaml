@@ -49,6 +49,10 @@ spec:
       labels:
         app.kubernetes.io/name: orders-db
         app.kubernetes.io/part-of: spaceship-orders
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9187"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: postgres
@@ -72,6 +76,30 @@ spec:
             exec:
               command: ["pg_isready", "-U", "postgres", "-d", "orders"]
             initialDelaySeconds: 20
+            periodSeconds: 10
+        - name: postgres-exporter
+          image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 9187
+          env:
+            - name: DATA_SOURCE_URI
+              value: "localhost:5432/orders?sslmode=disable"
+            - name: DATA_SOURCE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: orders-db
+                  key: POSTGRES_USER
+            - name: DATA_SOURCE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: orders-db
+                  key: POSTGRES_PASSWORD
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
             periodSeconds: 10
       volumes:
         - name: data

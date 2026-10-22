@@ -15,6 +15,10 @@ type HTTPConfig interface {
 	ReadTimeout() time.Duration
 }
 
+type MetricsHttpConfig interface {
+	Address() string
+}
+
 type PostgresConfig interface {
 	Dsn() string
 	MigrationDir() string

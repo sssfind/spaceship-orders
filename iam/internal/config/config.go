@@ -12,6 +12,7 @@ import (
 type Config struct {
 	LoggerConfig
 	HTTPConfig
+	MetricsHttpConfig
 	PostgresConfig
 	SessionConfig
 }
@@ -29,6 +30,11 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("http config error: %w", err)
 	}
 
+	metricsCfg, err := env.NewMetricsHTTPConfig()
+	if err != nil {
+		return nil, fmt.Errorf("metrics config error: %w", err)
+	}
+
 	postgresCfg, err := env.NewPostgresConfig()
 	if err != nil {
 		return nil, fmt.Errorf("postgres config error: %w", err)
@@ -40,10 +46,11 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		LoggerConfig:   loggerCfg,
-		HTTPConfig:     httpCfg,
-		PostgresConfig: postgresCfg,
-		SessionConfig:  sessionCfg,
+		LoggerConfig:      loggerCfg,
+		HTTPConfig:        httpCfg,
+		MetricsHttpConfig: metricsCfg,
+		PostgresConfig:    postgresCfg,
+		SessionConfig:     sessionCfg,
 	}, nil
 }
 
