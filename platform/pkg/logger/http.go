@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"platform/pkg/metrics"
 )
 
 type statusWriter struct {
@@ -36,12 +37,14 @@ func HTTP(next http.Handler) http.Handler {
 		sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
 		start := time.Now()
 		next.ServeHTTP(sw, r)
+		elapsed := time.Since(start)
+		metrics.ObserveHTTP(r.Method, sw.status, elapsed)
 
 		fields := []zap.Field{
 			zap.String("http.method", r.Method),
 			zap.String("http.path", r.URL.Path),
 			zap.Int("http.status", sw.status),
-			zap.Duration("duration", time.Since(start)),
+			zap.Duration("duration", elapsed),
 		}
 
 		ctx := r.Context()

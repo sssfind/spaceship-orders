@@ -13,6 +13,7 @@ import (
 	"iam/internal/config"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
+	"platform/pkg/metrics"
 	platformMigrator "platform/pkg/migrator/pg"
 
 	iamV1 "spaceship-orders/shared/pkg/openapi/iam/v1"
@@ -21,6 +22,7 @@ import (
 type App struct {
 	serviceProvider *serviceProvider
 	httpServer      *http.Server
+	metricsServer   *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -41,6 +43,8 @@ func NewApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
+
+	metrics.SetServiceName(cfg.ServiceName())
 
 	closer.AddNamed("logger", func(c context.Context) error {
 		return logger.Shutdown(c)
@@ -94,6 +98,11 @@ func (a *App) initDependencies(ctx context.Context) error {
 		return a.httpServer.Shutdown(c)
 	})
 
+	a.metricsServer = metrics.NewServer(a.serviceProvider.cfg.MetricsAddress())
+	closer.AddNamed("metrics_server", func(c context.Context) error {
+		return a.metricsServer.Shutdown(c)
+	})
+
 	return nil
 }
 
@@ -103,6 +112,13 @@ func (a *App) Run() error {
 
 	ctx := context.Background()
 	logger.Info(ctx, fmt.Sprintf("IAM HTTP Server успешно запущен на %s", a.httpServer.Addr))
+	logger.Info(ctx, fmt.Sprintf("IAM metrics server запущен на %s", a.metricsServer.Addr))
+
+	go func() {
+		if err := a.metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error(ctx, fmt.Sprintf("metrics server runtime error: %v", err))
+		}
+	}()
 
 	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("http server runtime error: %w", err)

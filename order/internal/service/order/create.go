@@ -11,7 +11,14 @@ import (
 )
 
 func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []uuid.UUID) (*model.Order, error) {
+	if s.demoFault == "create_fail" {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("injected").Inc()
+		logger.Warn(ctx, "demo fault: injected create failure")
+		return nil, model.ErrInjectedFailure
+	}
+
 	if len(partUUIDs) == 0 {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("empty_parts").Inc()
 		return nil, model.ErrEmptyPartsList
 	}
 
@@ -26,9 +33,11 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 
 	parts, err := s.partRepo.GetByUUIDs(ctx, unique)
 	if err != nil {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("repo").Inc()
 		return nil, err
 	}
 	if len(parts) != len(unique) {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("not_found").Inc()
 		return nil, model.ErrPartNotFound
 	}
 
@@ -45,6 +54,7 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 		part := partsByUUID[id]
 		qty := qtyByPart[id]
 		if part.InStock < qty {
+			metrics.OrdersCreateFailedTotal.WithLabelValues("stock").Inc()
 			return nil, model.ErrInsufficientStock
 		}
 		items = append(items, model.OrderItem{
@@ -72,10 +82,11 @@ func (s *srv) CreateOrder(ctx context.Context, userUUID uuid.UUID, partUUIDs []u
 	}
 
 	if err := s.orderRepo.Create(ctx, newOrder); err != nil {
+		metrics.OrdersCreateFailedTotal.WithLabelValues("repo").Inc()
 		return nil, err
 	}
 
-	metrics.OrdersTotal.Inc()
+	metrics.OrdersCreatedTotal.Inc()
 	metrics.OrdersRevenueTotal.Add(totalPrice)
 
 	logger.Info(ctx, "order created",

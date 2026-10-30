@@ -27,5 +27,5 @@ func (s *ServiceSuite) SetupTest() {
 	s.repo = mocks.NewMockOrderRepository(s.T())
 	s.partRepo = mocks.NewMockPartRepository(s.T())
 	s.paymentRepo = mocks.NewMockPaymentRepository(s.T())
-	s.svc = NewService(s.repo, s.partRepo, s.paymentRepo)
+	s.svc = NewService(s.repo, s.partRepo, s.paymentRepo, "off")
 }

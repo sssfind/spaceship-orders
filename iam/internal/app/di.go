@@ -79,7 +79,7 @@ func (sp *serviceProvider) AuthService(ctx context.Context) (service.AuthService
 		if err != nil {
 			return nil, err
 		}
-		sp.authSrv = authImpl.NewService(users, sessions, sp.cfg.TTL())
+		sp.authSrv = authImpl.NewService(users, sessions, sp.cfg.TTL(), sp.cfg.DemoFault())
 	}
 	return sp.authSrv, nil
 }

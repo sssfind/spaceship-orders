@@ -84,7 +84,7 @@ graph LR
 
 С UI удобнее ходить на Order (`:8081`) — он проксирует `/api/v1/auth/*` на IAM.
 
-Служебные: `GET /health`, `GET /metrics` (Order).
+Служебные: `GET /health` (публичный HTTP), `GET /metrics` на отдельном порту `9090` (Order) / `9091` (IAM в Compose).
 
 ---
 

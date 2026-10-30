@@ -1,0 +1,70 @@
+# Запросы для vmui VictoriaMetrics (порт 8428, не Victoria Logs 9428).
+# Окно 1h — для скринкаста; в отчёте SLO считается за 7d.
+
+# --- Сырые метрики ---
+orders_created_total
+orders_create_failed_total
+iam_logins_total
+http_requests_total
+probe_success
+
+# --- SLI-1 RBSLO: успешность создания заказа ---
+sum(rate(orders_created_total[1h]))
+/
+clamp_min(
+  sum(rate(orders_created_total[1h])) + sum(rate(orders_create_failed_total[1h])),
+  1e-9
+)
+
+# --- SLI-2 RBSLO: успешность логина ---
+sum(rate(iam_logins_total{result="ok"}[1h]))
+/
+clamp_min(sum(rate(iam_logins_total[1h])), 1e-9)
+
+# --- SLI-3 TBSLO: доля хороших минут HTTP (не-5xx >= 99%) ---
+avg_over_time(
+  (
+    (
+      sum(rate(http_requests_total{code!~"5.."}[1m]))
+      /
+      clamp_min(sum(rate(http_requests_total[1m])), 1e-9)
+    ) >= 0.99
+  )[1h:1m]
+)
+
+# --- Пробер /health (TBSLO по минутам) ---
+avg_over_time((probe_success == 1)[1h:1m])
+
+# --- Линия SLO ---
+vector(0.99)
+
+# --- Общий SLA: среднее выполнение трёх SLO (AND ближе через min) ---
+(
+  (
+    (
+      sum(rate(orders_created_total[1h]))
+      /
+      clamp_min(sum(rate(orders_created_total[1h])) + sum(rate(orders_create_failed_total[1h])), 1e-9)
+    ) >= 0.99
+  )
+  +
+  (
+    (
+      sum(rate(iam_logins_total{result="ok"}[1h]))
+      /
+      clamp_min(sum(rate(iam_logins_total[1h])), 1e-9)
+    ) >= 0.99
+  )
+  +
+  (
+    avg_over_time(
+      (
+        (
+          sum(rate(http_requests_total{code!~"5.."}[1m]))
+          /
+          clamp_min(sum(rate(http_requests_total[1m])), 1e-9)
+        ) >= 0.99
+      )[1h:1m]
+    ) >= 0.99
+  )
+) / 3

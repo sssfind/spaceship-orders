@@ -11,6 +11,9 @@ data:
   HTTP_HOST: "0.0.0.0"
   HTTP_PORT: "8081"
   HTTP_READ_TIMEOUT: "5s"
+  METRICS_HOST: "0.0.0.0"
+  METRICS_PORT: "9090"
+  DEMO_FAULT: "off"
   FRONTEND_DIR: /app/frontend
   LOGGER_LEVEL: info
   LOGGER_AS_JSON: "true"
@@ -55,6 +58,10 @@ spec:
       labels:
         app.kubernetes.io/name: order
         app.kubernetes.io/part-of: spaceship-orders
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
     spec:
       initContainers:
         - name: wait-for-deps
@@ -74,6 +81,8 @@ spec:
           ports:
             - name: http
               containerPort: 8081
+            - name: metrics
+              containerPort: 9090
           envFrom:
             - configMapRef:
                 name: order
@@ -109,3 +118,6 @@ spec:
       port: 8081
       targetPort: http
       nodePort: 30081
+    - name: metrics
+      port: 9090
+      targetPort: metrics

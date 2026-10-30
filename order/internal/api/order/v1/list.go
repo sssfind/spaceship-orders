@@ -2,15 +2,14 @@ package v1
 
 import (
 	"context"
-	customMiddleware "order/internal/middleware"
 
 	"order/internal/converter"
+	customMiddleware "order/internal/middleware"
 
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 )
 
 func (h *api) ListOrders(ctx context.Context) (orderV1.ListOrdersRes, error) {
-
 	userUUID, ok := customMiddleware.UserUUIDFromContext(ctx)
 	if !ok {
 		return &orderV1.ListOrdersBadRequest{Code: 401, Message: "Authentication required"}, nil

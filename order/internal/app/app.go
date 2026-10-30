@@ -13,13 +13,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	healthAPI "order/internal/api/health"
 	iamclient "order/internal/client/iam"
 	"order/internal/config"
 	customMiddleware "order/internal/middleware"
 	"platform/pkg/closer"
 	"platform/pkg/logger"
+	"platform/pkg/metrics"
 	platformMigrator "platform/pkg/migrator/pg"
 	"platform/pkg/tracing"
 
@@ -29,6 +29,7 @@ import (
 type App struct {
 	serviceProvider *serviceProvider
 	httpServer      *http.Server
+	metricsServer   *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -51,6 +52,8 @@ func NewApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to init logger: %w", err)
 	}
+
+	metrics.SetServiceName(cfg.ServiceName())
 
 	closer.AddNamed("logger", func(c context.Context) error {
 		return logger.Shutdown(c)
@@ -112,7 +115,6 @@ func (a *App) initDependencies(ctx context.Context) error {
 	r.Use(logger.HTTP)
 
 	r.Get("/health", healthHandler.HealthCheck)
-	r.Handle("/metrics", promhttp.Handler())
 
 	if frontendDir := resolveFrontendDir(); frontendDir != "" {
 		mountFrontend(r, frontendDir)
@@ -137,6 +139,11 @@ func (a *App) initDependencies(ctx context.Context) error {
 
 	closer.AddNamed("http_server", func(c context.Context) error {
 		return a.httpServer.Shutdown(c)
+	})
+
+	a.metricsServer = metrics.NewServer(a.serviceProvider.cfg.MetricsAddress())
+	closer.AddNamed("metrics_server", func(c context.Context) error {
+		return a.metricsServer.Shutdown(c)
 	})
 
 	return nil
@@ -182,6 +189,13 @@ func (a *App) Run() error {
 	ctx := context.Background()
 
 	logger.Info(ctx, fmt.Sprintf("order HTTP Server успешно запущен на %s", a.httpServer.Addr))
+	logger.Info(ctx, fmt.Sprintf("order metrics server запущен на %s", a.metricsServer.Addr))
+
+	go func() {
+		if err := a.metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error(ctx, fmt.Sprintf("metrics server runtime error: %v", err))
+		}
+	}()
 
 	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("http server runtime error: %w", err)

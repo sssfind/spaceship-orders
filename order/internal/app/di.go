@@ -98,7 +98,7 @@ func (sp *serviceProvider) OrderService(ctx context.Context) (service.OrderServi
 		if err != nil {
 			return nil, err
 		}
-		sp.orderSrv = orderImpl.NewService(orderRepo, partRepo, paymentRepo)
+		sp.orderSrv = orderImpl.NewService(orderRepo, partRepo, paymentRepo, sp.cfg.DemoFault())
 	}
 	return sp.orderSrv, nil
 }

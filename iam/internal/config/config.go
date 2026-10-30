@@ -14,6 +14,8 @@ type Config struct {
 	HTTPConfig
 	PostgresConfig
 	SessionConfig
+	metricsHTTP MetricsHTTPConfig
+	demoFault   DemoFaultConfig
 }
 
 func Load() (*Config, error) {
@@ -39,12 +41,27 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("session config error: %w", err)
 	}
 
+	metricsCfg, err := env.NewMetricsHTTPConfig()
+	if err != nil {
+		return nil, fmt.Errorf("metrics http config error: %w", err)
+	}
+
 	return &Config{
 		LoggerConfig:   loggerCfg,
 		HTTPConfig:     httpCfg,
 		PostgresConfig: postgresCfg,
 		SessionConfig:  sessionCfg,
+		metricsHTTP:    metricsCfg,
+		demoFault:      env.NewDemoFaultConfig(),
 	}, nil
+}
+
+func (c *Config) MetricsAddress() string {
+	return c.metricsHTTP.Address()
+}
+
+func (c *Config) DemoFault() string {
+	return c.demoFault.Mode()
 }
 
 func (c *Config) ServiceName() string {

@@ -29,6 +29,7 @@ services:
       dockerfile: deploy/docker/order/Dockerfile
     ports:
       - "${HTTP_PORT}:${HTTP_PORT}"
+      - "${METRICS_PORT}:${METRICS_PORT}"
     env_file:
       - .env
     networks:

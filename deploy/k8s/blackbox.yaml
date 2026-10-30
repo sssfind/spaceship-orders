@@ -1,0 +1,81 @@
+# Синтетический пробер: HTTP GET /health у Order и IAM.
+# VictoriaMetrics скрейпит /probe (см. deploy/k8s/monitoring/vm-single-values.yaml).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blackbox
+  namespace: spaceship
+  labels:
+    app.kubernetes.io/name: blackbox
+    app.kubernetes.io/part-of: spaceship-orders
+data:
+  blackbox.yml: |
+    modules:
+      http_2xx:
+        prober: http
+        timeout: 5s
+        http:
+          method: GET
+          valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+          valid_status_codes: [200]
+          preferred_ip_protocol: ip4
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blackbox
+  namespace: spaceship
+  labels:
+    app.kubernetes.io/name: blackbox
+    app.kubernetes.io/part-of: spaceship-orders
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blackbox
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: blackbox
+        app.kubernetes.io/part-of: spaceship-orders
+    spec:
+      containers:
+        - name: blackbox
+          image: prom/blackbox-exporter:v0.25.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=/config/blackbox.yml
+          ports:
+            - name: http
+              containerPort: 9115
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: blackbox
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blackbox
+  namespace: spaceship
+  labels:
+    app.kubernetes.io/name: blackbox
+    app.kubernetes.io/part-of: spaceship-orders
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: blackbox
+  ports:
+    - name: http
+      port: 9115
+      targetPort: http

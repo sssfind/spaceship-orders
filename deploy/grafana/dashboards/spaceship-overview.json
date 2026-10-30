@@ -1,69 +1,98 @@
 {
   "id": null,
-  "title": "Spaceship Orders Metrics",
-  "description": "Дашборд мониторинга Order и Assembly сервисов",
-  "tags": ["spaceship", "orders", "assembly"],
+  "title": "Spaceship SLI / SLO / SLA",
+  "description": "Индикаторы доступности Order и IAM",
+  "tags": ["spaceship", "sli", "slo"],
   "timezone": "browser",
   "refresh": "5s",
   "time": {
-    "from": "now-15m",
+    "from": "now-1h",
     "to": "now"
   },
   "editable": true,
   "panels": [
     {
       "id": 1,
-      "title": "Total Orders",
-      "description": "Общее количество созданных заказов",
+      "title": "SLI-1 RBSLO: создание заказа",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
       "targets": [
         {
-          "expr": "orders_total",
-          "legendFormat": "Created Orders",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus-uid"
-          }
+          "expr": "sum(rate(orders_created_total[1h])) / clamp_min(sum(rate(orders_created_total[1h])) + sum(rate(orders_create_failed_total[1h])), 1e-9)",
+          "legendFormat": "SLI create",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
+        },
+        {
+          "expr": "vector(0.99)",
+          "legendFormat": "SLO 99%",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
         }
       ]
     },
     {
       "id": 2,
-      "title": "Total Revenue",
-      "description": "Суммарная выручка по заказам",
+      "title": "SLI-2 RBSLO: логин",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
       "targets": [
         {
-          "expr": "orders_revenue_total",
-          "legendFormat": "Revenue",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus-uid"
-          }
+          "expr": "sum(rate(iam_logins_total{result=\"ok\"}[1h])) / clamp_min(sum(rate(iam_logins_total[1h])), 1e-9)",
+          "legendFormat": "SLI login",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
+        },
+        {
+          "expr": "vector(0.99)",
+          "legendFormat": "SLO 99%",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
         }
       ]
     },
     {
       "id": 3,
-      "title": "Assembly Duration p95",
-      "description": "95-й перцентиль времени сборки корабля",
+      "title": "SLI-3 TBSLO: хорошие минуты HTTP",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(assembly_duration_seconds_bucket[1m])) by (le))",
-          "legendFormat": "Assembly p95",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus-uid"
-          }
+          "expr": "avg_over_time(((sum(rate(http_requests_total{code!~\"5..\"}[1m])) / clamp_min(sum(rate(http_requests_total[1m])), 1e-9)) >= 0.99)[1h:1m])",
+          "legendFormat": "SLI HTTP minutes",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
+        },
+        {
+          "expr": "vector(0.99)",
+          "legendFormat": "SLO 99%",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Пробер /health",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "expr": "probe_success",
+          "legendFormat": "{{instance}}",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "HTTP latency p95",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))",
+          "legendFormat": "{{service}} p95",
+          "datasource": {"type": "prometheus", "uid": "prometheus-uid"}
         }
       ]
     }
   ],
-  "version": 1,
+  "version": 2,
   "uid": "spaceship-orders-overview",
   "schemaVersion": 30
 }

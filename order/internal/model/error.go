@@ -11,4 +11,5 @@ var (
 	ErrInsufficientStock  = errors.New("insufficient stock")
 	ErrPaymentNotFound    = errors.New("payment not found")
 	ErrEmptyPartsList     = errors.New("parts list is empty")
+	ErrInjectedFailure    = errors.New("injected demo failure")
 )

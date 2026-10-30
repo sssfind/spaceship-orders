@@ -7,26 +7,30 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"iam/internal/metrics"
 	"iam/internal/model"
 	"iam/internal/repository"
 	"platform/pkg/logger"
 )
 
 type Service struct {
-	users    repository.UserRepository
-	sessions repository.SessionRepository
-	ttl      time.Duration
+	users     repository.UserRepository
+	sessions  repository.SessionRepository
+	ttl       time.Duration
+	demoFault string
 }
 
 func NewService(
 	users repository.UserRepository,
 	sessions repository.SessionRepository,
 	ttl time.Duration,
+	demoFault string,
 ) *Service {
 	return &Service{
-		users:    users,
-		sessions: sessions,
-		ttl:      ttl,
+		users:     users,
+		sessions:  sessions,
+		ttl:       ttl,
+		demoFault: demoFault,
 	}
 }
 
@@ -47,16 +51,25 @@ func (s *Service) Register(ctx context.Context, login, password string) (*model.
 	if err := s.users.Create(ctx, user); err != nil {
 		return nil, err
 	}
+
+	metrics.RegistrationsTotal.Inc()
 	return user, nil
 }
 
 func (s *Service) Login(ctx context.Context, login, password string) (uuid.UUID, *model.User, error) {
+	if s.demoFault == "login_fail" {
+		metrics.LoginsTotal.WithLabelValues("fail").Inc()
+		return uuid.Nil, nil, model.ErrInvalidCredentials
+	}
+
 	user, err := s.users.GetByLogin(ctx, login)
 	if err != nil {
+		metrics.LoginsTotal.WithLabelValues("fail").Inc()
 		return uuid.Nil, nil, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		metrics.LoginsTotal.WithLabelValues("fail").Inc()
 		return uuid.Nil, nil, model.ErrInvalidCredentials
 	}
 
@@ -68,8 +81,11 @@ func (s *Service) Login(ctx context.Context, login, password string) (uuid.UUID,
 		CreatedAt:   now,
 	}
 	if err := s.sessions.Create(ctx, session); err != nil {
+		metrics.LoginsTotal.WithLabelValues("fail").Inc()
 		return uuid.Nil, nil, err
 	}
+
+	metrics.LoginsTotal.WithLabelValues("ok").Inc()
 
 	logger.Info(ctx, "user logged in",
 		zap.String("login", login),
@@ -80,7 +96,11 @@ func (s *Service) Login(ctx context.Context, login, password string) (uuid.UUID,
 }
 
 func (s *Service) Logout(ctx context.Context, sessionUUID uuid.UUID) error {
-	return s.sessions.Delete(ctx, sessionUUID)
+	if err := s.sessions.Delete(ctx, sessionUUID); err != nil {
+		return err
+	}
+	metrics.LogoutsTotal.Inc()
+	return nil
 }
 
 func (s *Service) Whoami(ctx context.Context, sessionUUID uuid.UUID) (*model.User, error) {

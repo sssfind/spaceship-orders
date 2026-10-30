@@ -22,6 +22,14 @@ type OrderHttpConfig interface {
 	ReadTimeout() time.Duration
 }
 
+type MetricsHTTPConfig interface {
+	Address() string
+}
+
+type DemoFaultConfig interface {
+	Mode() string
+}
+
 type PostgresConfig interface {
 	Dsn() string
 	MigrationDir() string
