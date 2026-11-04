@@ -1,0 +1,96 @@
+server:
+  datasource:
+    url: http://vm-single-victoria-metrics-single-server.monitoring.svc:8428
+  notifier:
+    url: http://vmalert-victoria-metrics-alert-alertmanager.monitoring.svc:9093
+
+  config:
+    alerts:
+      groups:
+        - name: spaceship-service
+          interval: 15s
+          rules:
+            - alert: OrderCreateErrorRate
+              expr: |
+                (
+                  sum(rate(orders_create_failed_total[5m]))
+                  /
+                  clamp_min(
+                    sum(rate(orders_created_total[5m]))
+                    + sum(rate(orders_create_failed_total[5m])),
+                    1e-9
+                  )
+                ) > 0.05
+              for: 1m
+              labels:
+                severity: critical
+                service: order
+              annotations:
+                summary: "Доля ошибок создания заказа > 5%"
+                description: "SLI create ниже цели. Сейчас {{ $value | humanizePercentage }}"
+
+            - alert: IAMLoginErrorRate
+              expr: |
+                (
+                  sum(rate(iam_logins_total{result="fail"}[5m]))
+                  /
+                  clamp_min(sum(rate(iam_logins_total[5m])), 1e-9)
+                ) > 0.2
+              for: 1m
+              labels:
+                severity: warning
+                service: iam
+              annotations:
+                summary: "Доля неуспешных логинов > 20%"
+                description: "SLI login деградировал. Сейчас {{ $value | humanizePercentage }}"
+
+            - alert: HTTPHighErrorRate
+              expr: |
+                (
+                  sum(rate(http_requests_total{code=~"5.."}[5m]))
+                  /
+                  clamp_min(sum(rate(http_requests_total[5m])), 1e-9)
+                ) > 0.05
+              for: 1m
+              labels:
+                severity: critical
+              annotations:
+                summary: "HTTP 5xx > 5%"
+                description: "Доля 5xx {{ $value | humanizePercentage }}"
+
+        - name: spaceship-runtime
+          interval: 15s
+          rules:
+            - alert: GoGoroutinesHigh
+              expr: go_goroutines{namespace="spaceship"} > 50
+              for: 2m
+              labels:
+                severity: warning
+              annotations:
+                summary: "Много горутин у {{ $labels.pod }}"
+                description: "{{ $value }} goroutines"
+
+            - alert: ProcessRSSHigh
+              expr: process_resident_memory_bytes{namespace="spaceship"} > 2e8
+              for: 2m
+              labels:
+                severity: warning
+              annotations:
+                summary: "RSS процесса > 200Mi у {{ $labels.pod }}"
+
+alertmanager:
+  enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: webhook
+      group_by: ["alertname"]
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+    receivers:
+      - name: webhook
+        webhook_configs:
+          - url: "https://webhook.site/94f5f3bc-3345-4699-aedf-144d081811bb"
+            send_resolved: true
