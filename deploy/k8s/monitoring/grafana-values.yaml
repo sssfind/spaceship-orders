@@ -1,0 +1,83 @@
+# Grafana в namespace monitoring, datasource — VictoriaMetrics :8428.
+#
+# helm repo add grafana https://grafana.github.io/helm-charts
+# helm repo add grafana-community https://grafana-community.github.io/helm-charts   # из текста ДЗ, тот же chart
+# helm repo update
+#
+# kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+# kubectl apply -k deploy/grafana
+# helm upgrade --install grafana grafana/grafana -n monitoring --create-namespace \
+#   -f deploy/k8s/monitoring/grafana-values.yaml
+# kubectl -n monitoring port-forward svc/grafana 3000:80
+#
+# UI: http://localhost:3000  admin / admin
+adminUser: admin
+adminPassword: admin
+assertNoLeakedSecrets: false
+
+persistence:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 80
+
+grafana.ini:
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+  security:
+    disable_initial_admin_password_change: true
+  users:
+    default_theme: dark
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: VictoriaMetrics
+        type: prometheus
+        access: proxy
+        url: http://vm-single-victoria-metrics-single-server.monitoring.svc:8428
+        isDefault: true
+        uid: victoriametrics
+        editable: true
+        jsonData:
+          httpMethod: POST
+          timeInterval: 15s
+
+# Два каталога: свои JSON (ConfigMap) и скачанный 9628 (init-контейнер чарта).
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: spaceship
+        orgId: 1
+        folder: Spaceship
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/spaceship
+      - name: postgres
+        orgId: 1
+        folder: PostgreSQL
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/postgres
+
+extraConfigmapMounts:
+  - name: spaceship-dashboards
+    configMap: grafana-spaceship-dashboards
+    mountPath: /var/lib/grafana/dashboards/spaceship
+    readOnly: true
+
+# Официальный PostgreSQL Database: https://grafana.com/grafana/dashboards/9628
+# После загрузки в переменных дашборда job = kubernetes-pods.
+dashboards:
+  postgres:
+    postgres-official:
+      gnetId: 9628
+      datasource: VictoriaMetrics

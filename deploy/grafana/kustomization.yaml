@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: grafana-spaceship-dashboards
+    files:
+      - spaceship-overview.json=dashboards/spaceship-overview.json
+      - postgres-exporter.json=dashboards/postgres-exporter.json
+    options:
+      labels:
+        app.kubernetes.io/part-of: spaceship-orders
+        grafana_dashboard: "1"
