@@ -143,7 +143,7 @@
           "refId": "A"
         }
       ],
-      "title": "RPS (RED Rate)",
+      "title": "RPS",
       "type": "stat"
     },
     {
@@ -186,7 +186,7 @@
           "refId": "A"
         }
       ],
-      "title": "Error rate (RED Errors)",
+      "title": "Error rate",
       "type": "stat"
     },
     {
@@ -226,7 +226,7 @@
           "refId": "A"
         }
       ],
-      "title": "Latency p95 (RED Duration)",
+      "title": "Latency p95",
       "type": "stat"
     },
     {
@@ -327,7 +327,7 @@
           "refId": "B"
         }
       ],
-      "title": "SLA пробера по цели (доля минут UP)",
+      "title": "SLA пробера по цели",
       "type": "stat"
     },
     {
@@ -383,7 +383,7 @@
           "refId": "B"
         }
       ],
-      "title": "SLA пробера во времени (TBSLO 1h)",
+      "title": "SLA пробера во времени",
       "type": "timeseries"
     },
     {
@@ -481,7 +481,7 @@
           "refId": "A"
         }
       ],
-      "title": "Rate / Traffic — RPS по сервису",
+      "title": "Rate / Traffic",
       "type": "timeseries"
     },
     {
@@ -594,7 +594,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
       "id": 103,
-      "title": "USE + Saturation (рантайм Go, collector promhttp)",
+      "title": "USE + Saturation",
       "type": "row"
     },
     {
@@ -728,7 +728,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
       "id": 104,
-      "title": "SLI / SLO приложения (ДЗ 4, окно 1h для стенда)",
+      "title": "SLI / SLO приложения",
       "type": "row"
     },
     {
@@ -932,14 +932,14 @@
           "refId": "A"
         }
       ],
-      "title": "SLA приложения — среднее выполнение трёх SLO (не путать с SLA пробера)",
+      "title": "SLA приложения — среднее выполнение трёх SLO",
       "type": "timeseries"
     },
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 48 },
       "id": 105,
-      "title": "Бизнес-счётчики (объём, не доступность)",
+      "title": "Бизнес-счётчики",
       "type": "row"
     },
     {
