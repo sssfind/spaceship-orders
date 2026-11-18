@@ -1,7 +1,7 @@
 # Grafana в namespace monitoring, datasource — VictoriaMetrics :8428.
 #
 # helm repo add grafana https://grafana.github.io/helm-charts
-# helm repo add grafana-community https://grafana-community.github.io/helm-charts   # из текста ДЗ, тот же chart
+# helm repo add grafana-community https://grafana-community.github.io/helm-charts
 # helm repo update
 #
 # kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -

@@ -6,4 +6,12 @@ coverage/
 *.out
 .env
 node_modules/
-.github/
+.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.tfstate.lock.info

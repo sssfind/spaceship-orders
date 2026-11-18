@@ -1,5 +1,4 @@
-# Запросы для vmui VictoriaMetrics (порт 8428, не Victoria Logs 9428).
-# Окно 1h — для скринкаста; в отчёте SLO считается за 7d.
+
 
 # --- Сырые метрики ---
 orders_created_total

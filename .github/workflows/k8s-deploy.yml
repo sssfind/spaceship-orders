@@ -1,0 +1,71 @@
+name: K8s deploy (kind)
+
+on:
+  push:
+    paths:
+      - "deploy/**"
+      - "order/**"
+      - "iam/**"
+      - "frontend/**"
+      - "platform/**"
+      - "shared/**"
+      - ".github/workflows/k8s-deploy.yml"
+  pull_request:
+    paths:
+      - "deploy/**"
+      - "order/**"
+      - "iam/**"
+      - "frontend/**"
+      - "platform/**"
+      - "shared/**"
+      - ".github/workflows/k8s-deploy.yml"
+
+jobs:
+  kind-terraform:
+    name: Build images, terraform apply, /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Build application images
+        run: |
+          docker build -f deploy/docker/order/Dockerfile -t order:latest .
+          docker build -f deploy/docker/iam/Dockerfile -t iam:latest .
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: spaceship
+          wait: 120s
+
+      - name: Load images into kind
+        run: |
+          kind load docker-image order:latest iam:latest --name spaceship
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: Terraform init and apply (app only)
+        working-directory: deploy/terraform
+        run: |
+          terraform init -input=false
+          terraform apply -input=false -auto-approve \
+            -var="kubeconfig_path=$HOME/.kube/config" \
+            -var="enable_monitoring=false"
+
+      - name: Wait for Order and IAM
+        run: |
+          kubectl -n spaceship wait --for=condition=available deploy/iam --timeout=180s
+          kubectl -n spaceship wait --for=condition=available deploy/order --timeout=180s
+
+      - name: Probe /health
+        run: |
+          kubectl -n spaceship run healthcheck-iam --restart=Never --attach --rm \
+            --image=curlimages/curl:8.11.1 -- -sf --max-time 10 http://iam:8082/health
+          kubectl -n spaceship run healthcheck-order --restart=Never --attach --rm \
+            --image=curlimages/curl:8.11.1 -- -sf --max-time 10 http://order:8081/health

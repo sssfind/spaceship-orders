@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	healthAPI "order/internal/api/health"
 	iamclient "order/internal/client/iam"
 	"order/internal/config"
@@ -22,6 +20,9 @@ import (
 	"platform/pkg/metrics"
 	platformMigrator "platform/pkg/migrator/pg"
 	"platform/pkg/tracing"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	orderV1 "spaceship-orders/shared/pkg/openapi/order/v1"
 )
@@ -123,7 +124,7 @@ func (a *App) initDependencies(ctx context.Context) error {
 		logger.Info(ctx, "frontend directory not found, UI is disabled")
 	}
 
-	// Same-origin auth for the UI: Order proxies /api/v1/auth/* to IAM.
+	// Same-origin auth for the UI: Order proxies /api/v1/auth/* to IAM
 	r.Handle("/api/v1/auth/*", iamProxy)
 
 	r.Group(func(pr chi.Router) {

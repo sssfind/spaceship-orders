@@ -7,6 +7,8 @@
 **Spaceship Orders** — клиент-серверное приложение для управления заказами космических кораблей.
 Бэкенд на Go (HTTP/REST + PostgreSQL), простой веб-UI раздаётся тем же сервисом.
 
+Учебный стенд курса SRE Т-Академии (эта ветка `sre-tbank-course`). Это не прод-версия пет-проекта на [`master`](https://github.com/sssfind/spaceship-orders) (пять сервисов, Kafka, gRPC).
+
 ---
 
 ## Архитектура
@@ -41,7 +43,7 @@ graph LR
 | Логи | Zap → stdout |
 | Метрики | Prometheus (`/metrics` на Order) |
 | Трейсинг | OpenTelemetry (опционально через env) |
-| Инфра | Docker Compose, Taskfile |
+| Инфра | Docker Compose, Kubernetes (Minikube/kind), Helm, Terraform, Taskfile |
 | Качество | golangci-lint, gofumpt, gci, mockery |
 
 ---
@@ -99,7 +101,7 @@ graph LR
 | [frontend/](./frontend) | Веб-UI (auth + каталог деталей + заказы) |
 | [shared/](./shared) | OpenAPI-схемы и сгенерированный HTTP-код (ogen) |
 | [platform/](./platform) | Общие библиотеки: logger, closer, migrator, tracing |
-| [deploy/](./deploy) | Docker, Compose, env-шаблоны |
+| [deploy/](./deploy) | Docker, Compose, Kubernetes-манифесты, Terraform, Helm values |
 
 ---
 
@@ -202,4 +204,30 @@ task format
 task lint
 ```
 
-CI: [.github/workflows/ci.yml](./.github/workflows/ci.yml) — lint и тесты.
+CI: [.github/workflows/ci.yml](./.github/workflows/ci.yml) — lint и тесты.  
+Деплой в kind: [.github/workflows/k8s-deploy.yml](./.github/workflows/k8s-deploy.yml) — сборка образов, `terraform apply`, проверка `/health`.
+
+---
+
+## Kubernetes и Terraform
+
+Учебный стенд (эта ветка), не прод-версия пет-проекта на `master`.
+
+Манифесты приложения: [deploy/k8s/](./deploy/k8s/). Helm values мониторинга: [deploy/k8s/monitoring/](./deploy/k8s/monitoring/).
+
+```bash
+# kubeconfig должен указывать на Minikube или kind
+cd deploy/terraform
+terraform init
+terraform apply                         # приложение + VictoriaMetrics / vmalert / Grafana
+# terraform apply -var='enable_monitoring=false'   # только Order, IAM, БД, логи
+```
+
+Образы `order:latest` и `iam:latest` собираются локально (`imagePullPolicy: Never`):
+
+```bash
+docker build -f deploy/docker/order/Dockerfile -t order:latest .
+docker build -f deploy/docker/iam/Dockerfile -t iam:latest .
+# Minikube: minikube image load order:latest && minikube image load iam:latest
+# kind:     kind load docker-image order:latest iam:latest
+```
